@@ -289,8 +289,13 @@ class InteractiveFirstAidChatbot:
             )
             if not _is_clear_followup and len(user_input.split()) >= 2:
                 _candidate, _score = self.find_best_match(user_input, threshold=0.0)
-                if _candidate is not None and _score >= 0.40:
-                    # Semantically close to a known emergency — treat as new question
+                _current = self.conversation_state.get('current_emergency')
+                if (_candidate is not None and _score >= 0.40
+                        and _current is not _candidate):
+                    # Semantically close to a DIFFERENT emergency — treat as new question.
+                    # If the best match is the same entry already being discussed,
+                    # the user is answering the follow-up (e.g. "the bleeding is heavy"),
+                    # not starting a new query, so state must NOT be reset.
                     self.conversation_state['current_emergency'] = None
                     self.conversation_state['waiting_for_followup'] = False
                     self.conversation_state['current_followup_index'] = 0

@@ -1594,7 +1594,15 @@ def show_chat_page():
 
             st.session_state.skip_refresh = True
             st.session_state.chat_history.append({'role': 'user', 'content': user_input})
-    
+
+            # Capture whether we are mid-follow-up BEFORE calling get_response.
+            # Used below to prevent timer detection misfiring on follow-up answers.
+            _was_in_followup = (
+                hasattr(st.session_state.chatbot, 'chatbot') and
+                st.session_state.chatbot.chatbot.conversation_state.get(
+                    'waiting_for_followup', False)
+            )
+
             with st.spinner('💭 Thinking...'):
                 _t0 = time.perf_counter()
                 _eval_error = None
@@ -1692,7 +1700,16 @@ def show_chat_page():
                     auth.update_user_chat(st.session_state.username, st.session_state.chat_history)
     
             if is_new_question:
-                timer_needed = detect_timer_need(bot_response)
+                # When the user was answering a follow-up question, skip
+                # scanning the bot response for timer keywords — the response
+                # is a specific follow-up reply, not a fresh emergency, and
+                # topic words in it (e.g. "cool", "water") would otherwise
+                # trigger the wrong timer.  The keyword fallback on user_input
+                # (ulq) below still runs so a user who genuinely introduces a
+                # new emergency mid-conversation still gets the correct timer.
+                timer_needed = (
+                    None if _was_in_followup else detect_timer_need(bot_response)
+                )
                 if not timer_needed:
                     ulq = user_input.lower()
                     if any(w in ulq for w in ['cpr', 'cardiac', 'heart attack', 'قلب', 'إنعاش',
