@@ -4,7 +4,7 @@ import time
 from streamlit_autorefresh import st_autorefresh
 from multilingual_interactive_chatbot import MultilingualInteractiveFirstAidChatbot
 import auth
-from chatbot_evaluator import record_interaction
+from chatbot_evaluator import record_interaction, _interactions, _get_summary
 
 # ─── Page config ──────────────────────────────────────────────────────────────
 st.set_page_config(
@@ -77,6 +77,7 @@ for _k, _v in {
     'completion_sound_played': False, 'current_chat_saved': False,
     'dark_mode': False, 'show_settings': False, 'feedback_list': [],
     'show_emergency_numbers': False, 'feedback_key': 0, 'feedback_submitted': False,
+    'show_eval_download': False,
 }.items():
     if _k not in st.session_state:
         st.session_state[_k] = _v
@@ -362,6 +363,147 @@ def clean_response(text):
             text = text.rstrip() + "\n\n━━━━━━━━━━━━━━━━━━━━━━"
         text = text + "\n\n" + timer_instruction
     return text
+
+
+def _build_eval_excel() -> bytes:
+    """Build the evaluation workbook in memory and return raw bytes for download."""
+    import io
+    import openpyxl
+    from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+    from openpyxl.utils import get_column_letter
+
+    summary = _get_summary()
+    wb = openpyxl.Workbook()
+
+    HEADER_FILL = PatternFill('solid', fgColor='1F4E79')
+    HEADER_FONT = Font(color='FFFFFF', bold=True, size=11)
+    ALT_FILL    = PatternFill('solid', fgColor='EBF3FB')
+    LABEL_FILL  = PatternFill('solid', fgColor='2E75B6')
+    LABEL_FONT  = Font(color='FFFFFF', bold=True)
+    TITLE_FONT  = Font(bold=True, size=14, color='1F4E79')
+    CENTRE      = Alignment(horizontal='center', vertical='center', wrap_text=True)
+    LEFT        = Alignment(horizontal='left',   vertical='center', wrap_text=True)
+    thin        = Side(style='thin', color='BDD7EE')
+    BORDER      = Border(left=thin, right=thin, top=thin, bottom=thin)
+
+    def _hdr(ws, row, col, value):
+        c = ws.cell(row=row, column=col, value=value)
+        c.fill = HEADER_FILL; c.font = HEADER_FONT
+        c.alignment = CENTRE;  c.border = BORDER
+
+    def _dat(ws, row, col, value, alt=False):
+        c = ws.cell(row=row, column=col, value=value)
+        if alt:
+            c.fill = ALT_FILL
+        c.alignment = LEFT; c.border = BORDER
+
+    def _section(ws, row, label):
+        ws.merge_cells(f'A{row}:C{row}')
+        c = ws.cell(row=row, column=1, value=label)
+        c.fill = LABEL_FILL; c.font = LABEL_FONT
+        c.alignment = LEFT; c.border = BORDER
+
+    def _row(ws, row, label, value, note=''):
+        for col, val in enumerate([label, value, note], 1):
+            _dat(ws, row, col, val, alt=(row % 2 == 0))
+        ws.cell(row=row, column=2).alignment = Alignment(
+            horizontal='center', vertical='center')
+
+    # ── Sheet 1: Interactions ─────────────────────────────────────────────
+    ws1 = wb.active
+    ws1.title = 'Interactions'
+    ws1.merge_cells('A1:J1')
+    t1 = ws1['A1']
+    t1.value = 'First Aid Chatbot — Interaction Log'
+    t1.font = TITLE_FONT; t1.alignment = CENTRE
+
+    headers = [
+        'Timestamp', 'User Input', 'Bot Response',
+        'Response Time (s)', 'Detected Lang', 'Input Lang',
+        'Lang Correct?', 'Severity', 'Match Found?', 'Error',
+    ]
+    for col, h in enumerate(headers, 1):
+        _hdr(ws1, 2, col, h)
+
+    for i, rec in enumerate(_interactions):
+        row = i + 3
+        alt = (i % 2 == 1)
+        _dat(ws1, row, 1,  rec['timestamp'],                       alt)
+        _dat(ws1, row, 2,  rec['user_input'],                       alt)
+        _dat(ws1, row, 3,  rec['bot_response'],                     alt)
+        _dat(ws1, row, 4,  rec['response_time'],                    alt)
+        _dat(ws1, row, 5,  rec['detected_lang'],                    alt)
+        _dat(ws1, row, 6,  rec['input_lang'],                       alt)
+        _dat(ws1, row, 7,  'Yes' if rec['lang_correct'] else 'No',  alt)
+        _dat(ws1, row, 8,  rec['severity'].upper(),                 alt)
+        _dat(ws1, row, 9,  'Yes' if rec['match_found'] else 'No',   alt)
+        _dat(ws1, row, 10, rec['error'],                            alt)
+
+    for col, w in enumerate([20, 40, 60, 18, 14, 12, 14, 12, 13, 30], 1):
+        ws1.column_dimensions[get_column_letter(col)].width = w
+    ws1.row_dimensions[1].height = 28
+    ws1.row_dimensions[2].height = 22
+    ws1.freeze_panes = 'A3'
+
+    # ── Sheet 2: Summary ──────────────────────────────────────────────────
+    ws2 = wb.create_sheet('Summary')
+    ws2.merge_cells('A1:C1')
+    t2 = ws2['A1']
+    t2.value = 'First Aid Chatbot — Evaluation Summary'
+    t2.font = TITLE_FONT; t2.alignment = CENTRE
+
+    _hdr(ws2, 2, 1, 'Metric')
+    _hdr(ws2, 2, 2, 'Value')
+    _hdr(ws2, 2, 3, 'Notes')
+
+    r = 3
+    _section(ws2, r, 'Session Overview');  r += 1
+    _row(ws2, r, 'Total Questions Asked', summary['total_questions']); r += 1
+    _row(ws2, r, 'Session Duration', f"{summary['session_duration_s']} s"); r += 1
+
+    r += 1
+    _section(ws2, r, 'Response Time'); r += 1
+    _row(ws2, r, 'Average Response Time', f"{summary['avg_response_time_s']} s"); r += 1
+    _row(ws2, r, 'Minimum Response Time', f"{summary['min_response_time_s']} s"); r += 1
+    _row(ws2, r, 'Maximum Response Time', f"{summary['max_response_time_s']} s"); r += 1
+
+    r += 1
+    _section(ws2, r, 'Language Accuracy'); r += 1
+    _row(ws2, r, 'Language Accuracy', f"{summary['language_accuracy_pct']} %",
+         'Response language matched input language'); r += 1
+    _row(ws2, r, 'Language Errors', summary['lang_errors'],
+         'Times response was in wrong language'); r += 1
+
+    r += 1
+    _section(ws2, r, 'Match Confidence'); r += 1
+    _row(ws2, r, 'Match Rate', f"{summary['match_rate_pct']} %",
+         'Queries that found a knowledge-base match'); r += 1
+    _row(ws2, r, 'Successful Matches', summary['matches_found']); r += 1
+    _row(ws2, r, 'Failed / Fallback', summary['matches_failed'],
+         'Returned clarification or not found'); r += 1
+
+    r += 1
+    _section(ws2, r, 'Severity Detection'); r += 1
+    _row(ws2, r, 'Severity Detected', f"{summary['severity_detected_pct']} %",
+         'Responses with critical/urgent/moderate label'); r += 1
+    _row(ws2, r, 'No Severity Count', summary['no_severity_count'],
+         'Responses with no severity label (normal)'); r += 1
+
+    r += 1
+    _section(ws2, r, 'Errors'); r += 1
+    _row(ws2, r, 'Total Errors', summary['error_count']); r += 1
+    _row(ws2, r, 'Error Rate', f"{summary['error_rate_pct']} %"); r += 1
+
+    ws2.column_dimensions['A'].width = 30
+    ws2.column_dimensions['B'].width = 18
+    ws2.column_dimensions['C'].width = 45
+    ws2.row_dimensions[1].height = 28
+    ws2.row_dimensions[2].height = 22
+    ws2.freeze_panes = 'A3'
+
+    buf = io.BytesIO()
+    wb.save(buf)
+    return buf.getvalue()
 
 
 def detect_timer_need(response_text):
@@ -1408,6 +1550,32 @@ def show_chat_page():
 </div>
 """, unsafe_allow_html=True)
 
+        # ── Eval download panel (shown only after secret keyword) ────────
+        if st.session_state.get('show_eval_download'):
+            if not _interactions:
+                st.info("No evaluation data yet")
+                st.session_state.show_eval_download = False
+            else:
+                _fname = f"evaluation_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
+                _dl_col, _x_col = st.columns([5, 1])
+                with _dl_col:
+                    st.download_button(
+                        label="Download Evaluation Report",
+                        data=_build_eval_excel(),
+                        file_name=_fname,
+                        mime=(
+                            "application/vnd.openxmlformats-officedocument"
+                            ".spreadsheetml.sheet"
+                        ),
+                        key="eval_download_btn",
+                        use_container_width=True,
+                    )
+                with _x_col:
+                    if st.button("Close", key="close_eval_download",
+                                 use_container_width=True):
+                        st.session_state.show_eval_download = False
+                        st.rerun()
+
         # ── Chat input row: SOS button left, chat input right ──
         sos_col, input_col = st.columns([1, 12])
         with sos_col:
@@ -1420,6 +1588,12 @@ def show_chat_page():
             user_input = st.chat_input("Describe the emergency…", key="chat_input")
     
         if user_input:
+            # ── Secret eval download — intercept before touching chat history ──
+            if user_input.strip() == "evaldownload123":
+                st.session_state.show_eval_download = True
+                st.session_state.skip_refresh = True
+                st.rerun()
+
             st.session_state.skip_refresh = True
             st.session_state.chat_history.append({'role': 'user', 'content': user_input})
     
