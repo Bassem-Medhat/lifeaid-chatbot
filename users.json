@@ -1,0 +1,285 @@
+{
+    "bassem": {
+        "password": "2224512ef44a62e580bb1c0dcb33aff688f4e7da8a488aeb4e7ca402c5cacf45",
+        "created_at": "2026-02-24 12:14:17.981123",
+        "chat_history": [],
+        "chat_sessions": [
+            {
+                "timestamp": "2026-03-14 05:02:59",
+                "messages": [
+                    {
+                        "role": "user",
+                        "content": "What to do if someone is choking?"
+                    },
+                    {
+                        "role": "assistant",
+                        "content": "\ud83d\udea8 CRITICAL EMERGENCY - IMMEDIATE ACTION NEEDED\n\nI know this is frightening, but act fast \u2014 you can help.\nStand behind the person and lean them slightly forward.\nWrap your arms around their waist.\nMake a fist and place it between the belly button and rib cage.\nGrab your fist with your other hand.\nPull sharply inward and upward in quick thrusts.\nDo five thrusts, then repeat until the object comes out.\nIf the person becomes unconscious, call emergency services immediately\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\n\ud83d\udccb To give you more specific guidance:\nIs the person conscious?\n\u23f1\ufe0f **Timer Available:** A \ud83e\udec1 Choking Response Timer is ready above. <a href=\"#timer-section\" style=\"background: #4A90E2; color: white; padding: 5px 12px; border-radius: 15px; text-decoration: none; font-size: 13px; display: inline-block; margin-left: 5px;\">\u2191 Go to Timer</a> Click '\u25b6\ufe0f Resume' to start the timer while you follow the steps.",
+                        "severity": "critical"
+                    },
+                    {
+                        "role": "user",
+                        "content": "yes"
+                    },
+                    {
+                        "role": "assistant",
+                        "content": "Ask them to cough forcefully. Stay ready to help if they worsen.\n\nNow, Can they cough or speak?",
+                        "severity": "normal"
+                    }
+                ]
+            }
+        ]
+    },
+    "bassem2": {
+        "password": "84d89877f0d4041efb6bf91a16f0248f2fd573e6af05c19f96bedb9f882f7882",
+        "created_at": "2026-03-13 02:33:35.488425",
+        "chat_history": [],
+        "chat_sessions": [
+            {
+                "timestamp": "2026-03-14 19:31:11",
+                "messages": [
+                    {
+                        "role": "user",
+                        "content": "How to perform CPR on someone who is not breathing?"
+                    },
+                    {
+                        "role": "assistant",
+                        "content": "\ud83d\udea8 CRITICAL EMERGENCY - IMMEDIATE ACTION NEEDED\n\nLay the person on a firm surface. Give 30 hard, fast chest compressions (push down about 2 inches). Then, tilt their head back, lift the chin, and give 2 rescue breaths. Keep repeating that\u201430 pumps, 2 breaths\u2014until help gets there or they start breathing on their own.\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\n\ud83d\udccb To give you more specific guidance:\nIs the victim on a hard, flat surface?\n\u23f1\ufe0f **Timer Available:** A \u2764\ufe0f CPR Cycle Timer is ready above. <a href=\"#timer-section\" style=\"background: #4A90E2; color: white; padding: 5px 12px; border-radius: 15px; text-decoration: none; font-size: 13px; display: inline-block; margin-left: 5px;\">\u2191 Go to Timer</a> Click '\u25b6\ufe0f Resume' to start the timer while you follow the steps.",
+                        "severity": "critical"
+                    },
+                    {
+                        "role": "user",
+                        "content": "flat "
+                    },
+                    {
+                        "role": "assistant",
+                        "content": "Start compressions in the center of the chest.\n\nNow, Are you comfortable giving rescue breaths?",
+                        "severity": "normal"
+                    },
+                    {
+                        "role": "user",
+                        "content": "yes"
+                    },
+                    {
+                        "role": "assistant",
+                        "content": "Do 30 compressions then 2 breaths. Drowning victims specifically need those breaths because they lack oxygen.\n\nWould you like more detailed step-by-step instructions?",
+                        "severity": "normal"
+                    },
+                    {
+                        "role": "user",
+                        "content": "thanks "
+                    },
+                    {
+                        "role": "assistant",
+                        "content": "You're welcome! Stay safe. If you need any more help, I'm here.",
+                        "severity": "normal"
+                    }
+                ]
+            },
+            {
+                "timestamp": "2026-03-14 19:32:26",
+                "messages": [
+                    {
+                        "role": "user",
+                        "content": "Someone has a burn"
+                    },
+                    {
+                        "role": "assistant",
+                        "content": "\u26a0\ufe0f URGENT - Act Quickly\n\nIf the burn is **major**, call 911 immediately after stopping the burning process.\n\nFor minor burns, cool the area with **cool running water** for several minutes. Do not use ice. Cover the burn lightly with a clean gauze bandage.\n\nYou may use aloe Vera and take pain relievers like ibuprofen or acetaminophen if needed. Do **not** break any blisters.\n\nGet medical help if the burn worsens, becomes infected, or covers a large area.\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\n\ud83d\udccb To give you more specific guidance:\nHow large and deep is the burn?\nResponse Options:\n\u23f1\ufe0f **Timer Available:** A \ud83d\udd25 Burn Cooling Timer is ready above. <a href=\"#timer-section\" style=\"background: #4A90E2; color: white; padding: 5px 12px; border-radius: 15px; text-decoration: none; font-size: 13px; display: inline-block; margin-left: 5px;\">\u2191 Go to Timer</a> Click '\u25b6\ufe0f Resume' to start the timer while you follow the steps.",
+                        "severity": "urgent"
+                    },
+                    {
+                        "role": "user",
+                        "content": "its deep "
+                    },
+                    {
+                        "role": "assistant",
+                        "content": "\"This is serious. Call emergency services now. Do not apply creams or ice, and keep the area covered with a clean cloth.\"\n\nNow, Are there blisters or broken skin?\nResponse Options:",
+                        "severity": "normal"
+                    },
+                    {
+                        "role": "user",
+                        "content": "broken skin yes "
+                    },
+                    {
+                        "role": "assistant",
+                        "content": "\"Do not break the blisters. Cool the burn and cover loosely with clean gauze. Seek medical care if pain or swelling increases.\"\n\nNow, Is the burn on the face, hands, or genitals?\nResponse Options:",
+                        "severity": "normal"
+                    },
+                    {
+                        "role": "user",
+                        "content": "hands "
+                    },
+                    {
+                        "role": "assistant",
+                        "content": "\"This is urgent. Call emergency services or go to a hospital immediately. Do not apply home remedies.\"\n\nWould you like more detailed step-by-step instructions?",
+                        "severity": "normal"
+                    },
+                    {
+                        "role": "user",
+                        "content": "thanks"
+                    },
+                    {
+                        "role": "assistant",
+                        "content": "You're welcome! Stay safe. If you need any more help, I'm here.",
+                        "severity": "normal"
+                    }
+                ]
+            }
+        ]
+    },
+    "test1": {
+        "password": "ecd71870d1963316a97e3ac3408c9835ad8cf0f3c1bc703527c30265534f75ae",
+        "created_at": "2026-04-01 10:22:57.547625",
+        "chat_history": [],
+        "chat_sessions": [
+            {
+                "timestamp": "2026-04-01 10:27:01",
+                "messages": [
+                    {
+                        "role": "user",
+                        "content": "someone is bleeding "
+                    },
+                    {
+                        "role": "assistant",
+                        "content": "\u26a0\ufe0f DRINGEND - Tree vinnig op\n\nEk is jammer dat dit gebeur - bloeding kan skrikwekkend lyk, maar jy kan help.\nEerstens, beskerm jouself. As jy weggooibare handskoene het, trek dit aan.\nSpoel dan die wond uit met skoon water om vuiligheid te verwyder indien moontlik.\nBedek die wond met 'n skoon lap, gaas of enige iets beskikbaar soos 'n handdoek of klere.\nDien ferm, direkte druk toe met albei hande om die bloeding te stop. Hou aan druk.\nAs jy kan, lig die beseerde liggaamsdeel bo hartvlak.\nAs bloed deurtrek, moenie die lap verwyder nie. Voeg meer lae by en hou druk.\nSodra bloeding ophou, maak 'n skoon verband oor die wond vas.\nKry onmiddellik mediese hulp indien:\nDie wond is diep of gapend\nBloeding sal nie stop nie\nBloed week deur verbande\nDie besering is van 'n byt, brandwond, punksie of elektriese bron\nJy vermoed arteri\u00eble bloeding\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\n\ud83d\udccb Om vir jou meer spesifieke leiding te gee:\nIs die bloeding swaar of deurweek deur verbande?",
+                        "severity": "urgent"
+                    }
+                ]
+            },
+            {
+                "timestamp": "2026-04-01 10:28:56",
+                "messages": [
+                    {
+                        "role": "user",
+                        "content": "How to perform CPR on someone who is not breathing?"
+                    },
+                    {
+                        "role": "assistant",
+                        "content": "\ud83d\udea8 CRITICAL EMERGENCY - IMMEDIATE ACTION NEEDED\n\nLay the person on a firm surface. Give 30 hard, fast chest compressions (push down about 2 inches). Then, tilt their head back, lift the chin, and give 2 rescue breaths. Keep repeating that\u201430 pumps, 2 breaths\u2014until help gets there or they start breathing on their own.\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\n\ud83d\udccb To give you more specific guidance:\nIs the victim on a hard, flat surface?\n\u23f1\ufe0f **Timer Available:** A \u2764\ufe0f CPR Cycle Timer is ready above. <a href=\"#timer-section\" style=\"background: #4A90E2; color: white; padding: 5px 12px; border-radius: 15px; text-decoration: none; font-size: 13px; display: inline-block; margin-left: 5px;\">\u2191 Go to Timer</a> Click '\u25b6\ufe0f Resume' to start the timer while you follow the steps.",
+                        "severity": "critical"
+                    },
+                    {
+                        "role": "user",
+                        "content": "flat "
+                    },
+                    {
+                        "role": "assistant",
+                        "content": "Start compressions in the center of the chest.\n\nNow, Are you comfortable giving rescue breaths?",
+                        "severity": "normal"
+                    },
+                    {
+                        "role": "user",
+                        "content": "yes"
+                    },
+                    {
+                        "role": "assistant",
+                        "content": "Do 30 compressions then 2 breaths. Drowning victims specifically need those breaths because they lack oxygen.\n\nWould you like more detailed step-by-step instructions?",
+                        "severity": "normal"
+                    },
+                    {
+                        "role": "user",
+                        "content": "yes what do i need to do after "
+                    },
+                    {
+                        "role": "assistant",
+                        "content": "\ud83d\udfe2 MODERATE\n\nCataracts are basically a clouding of the eye's natural lens. While there aren't \"first aid\" steps or pills to make them go away, you can manage early stages with better lighting and stronger glasses. Once they start interfering with your daily life or safety, surgery is the standard and very effective treatment.\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\n\ud83d\udccb To give you more specific guidance:\nIs your blurry vision making it dangerous for you to drive at night?",
+                        "severity": "moderate"
+                    }
+                ]
+            },
+            {
+                "timestamp": "2026-04-01 10:34:03",
+                "messages": [
+                    {
+                        "role": "user",
+                        "content": "bee sting "
+                    },
+                    {
+                        "role": "assistant",
+                        "content": "\"This sounds like a minor burn. Cool it under running water for 10\u201320 minutes and cover with clean gauze. Monitor for worsening pain or redness.\"\n\nNow, Are there blisters or broken skin?\nResponse Options:",
+                        "severity": "normal"
+                    }
+                ]
+            },
+            {
+                "timestamp": "2026-04-01 10:47:34",
+                "messages": [
+                    {
+                        "role": "user",
+                        "content": "How to perform CPR on someone who is not breathing?"
+                    },
+                    {
+                        "role": "assistant",
+                        "content": "\ud83d\udea8 CRITICAL EMERGENCY - IMMEDIATE ACTION NEEDED\n\nLay the person on a firm surface. Give 30 hard, fast chest compressions (push down about 2 inches). Then, tilt their head back, lift the chin, and give 2 rescue breaths. Keep repeating that\u201430 pumps, 2 breaths\u2014until help gets there or they start breathing on their own.\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\n\ud83d\udccb To give you more specific guidance:\nIs the victim on a hard, flat surface?\n\u23f1\ufe0f **Timer Available:** A \u2764\ufe0f CPR Cycle Timer is ready above. <a href=\"#timer-section\" style=\"background: #4A90E2; color: white; padding: 5px 12px; border-radius: 15px; text-decoration: none; font-size: 13px; display: inline-block; margin-left: 5px;\">\u2191 Go to Timer</a> Click '\u25b6\ufe0f Resume' to start the timer while you follow the steps.",
+                        "severity": "critical"
+                    },
+                    {
+                        "role": "user",
+                        "content": "flat"
+                    },
+                    {
+                        "role": "assistant",
+                        "content": "Start compressions in the center of the chest.\n\nNow, Are you comfortable giving rescue breaths?",
+                        "severity": "normal"
+                    }
+                ]
+            },
+            {
+                "timestamp": "2026-04-01 11:09:57",
+                "messages": [
+                    {
+                        "role": "user",
+                        "content": "my leg is broken "
+                    },
+                    {
+                        "role": "assistant",
+                        "content": "\u26a0\ufe0f DRINGEND - Tree vinnig op\n\nDie belangrikste ding is om te verhoed dat die been beweeg. Gebruik 'n spalk of 'n slinger om dit stil te hou, en wend 'n yspak aan om te help met die swelling. Moenie probeer om die been self te \"regmaak\" of in lyn te bring nie - gaan dadelik na 'n noodkamer of dringende sorg.\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\n\ud83d\udccb Om vir jou meer spesifieke leiding te gee:\nSteek die been deur die vel?",
+                        "severity": "urgent"
+                    }
+                ]
+            },
+            {
+                "timestamp": "2026-04-08 02:39:58",
+                "messages": [
+                    {
+                        "role": "user",
+                        "content": "How to perform CPR on someone who is not breathing?"
+                    },
+                    {
+                        "role": "assistant",
+                        "content": "\ud83d\udea8 CRITICAL EMERGENCY - IMMEDIATE ACTION NEEDED\n\nLay the person on a firm surface. Give 30 hard, fast chest compressions (push down about 2 inches). Then, tilt their head back, lift the chin, and give 2 rescue breaths. Keep repeating that\u201430 pumps, 2 breaths\u2014until help gets there or they start breathing on their own.\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\n\ud83d\udccb To give you more specific guidance:\nIs the victim on a hard, flat surface?\n\u23f1\ufe0f **Timer Available:** A \u2764\ufe0f CPR Cycle Timer is ready above. <a href=\"#timer-section\" style=\"background: #4A90E2; color: white; padding: 5px 12px; border-radius: 15px; text-decoration: none; font-size: 13px; display: inline-block; margin-left: 5px;\">\u2191 Go to Timer</a> Click '\u25b6\ufe0f Resume' to start the timer while you follow the steps.",
+                        "severity": "critical"
+                    }
+                ]
+            },
+            {
+                "timestamp": "2026-04-09 14:45:09",
+                "messages": [
+                    {
+                        "role": "user",
+                        "content": "What to do for severe bleeding?"
+                    },
+                    {
+                        "role": "assistant",
+                        "content": "\u26a0\ufe0f URGENT - Act Quickly\n\nI\u2019m sorry this is happening \u2014 bleeding can look scary, but you can help.\nFirst, protect yourself. If you have disposable gloves, put them on.\nNext, rinse the wound with clean water to remove dirt if possible.\nCover the wound with a clean cloth, gauze, or anything available like a towel or clothing.\nApply firm, direct pressure with both hands to stop the bleeding. Keep pressing.\nIf you can, raise the injured body part above heart level.\nIf blood soaks through, do not remove the cloth. Add more layers and keep pressure.\nOnce bleeding stops, secure a clean bandage over the wound.\nGet medical help immediately if:\nThe wound is deep or gaping\nBleeding won\u2019t stop\nBlood is soaking through bandages\nThe injury is from a bite, burn, puncture, or electrical source\nYou suspect arterial bleeding\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\n\ud83d\udccb To give you more specific guidance:\nIs the bleeding heavy or soaking through bandages?",
+                        "severity": "urgent"
+                    },
+                    {
+                        "role": "user",
+                        "content": "What to do if someone is choking?"
+                    },
+                    {
+                        "role": "assistant",
+                        "content": "\ud83d\udea8 CRITICAL EMERGENCY - IMMEDIATE ACTION NEEDED\n\nI know this is frightening, but act fast \u2014 you can help.\nStand behind the person and lean them slightly forward.\nWrap your arms around their waist.\nMake a fist and place it between the belly button and rib cage.\nGrab your fist with your other hand.\nPull sharply inward and upward in quick thrusts.\nDo five thrusts, then repeat until the object comes out.\nIf the person becomes unconscious, call emergency services immediately\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\n\ud83d\udccb To give you more specific guidance:\nIs the person conscious?\n\u23f1\ufe0f **Timer Available:** A \ud83e\udec1 Choking Response Timer is ready above. <a href=\"#timer-section\" style=\"background:#58A6FF;color:white;padding:4px 10px;border-radius:12px;text-decoration:none;font-size:12px;display:inline-block;margin-left:6px;\">\u2191 Go to Timer</a> Click '\u25b6\ufe0f Resume' to start.",
+                        "severity": "critical"
+                    }
+                ]
+            }
+        ]
+    },
+    "test1 ": {
+        "password": "1772d0119cc344f719853b2c032c2921398636766efd3ed2ffbad1c798e2bd97",
+        "created_at": "2026-04-01 10:58:04.956341",
+        "chat_history": []
+    }
+}
