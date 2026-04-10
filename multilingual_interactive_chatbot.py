@@ -1,3 +1,4 @@
+import re
 from interactive_chatbot import InteractiveFirstAidChatbot
 from deep_translator import GoogleTranslator
 from langdetect import detect, LangDetectException, DetectorFactory
@@ -152,6 +153,10 @@ class MultilingualInteractiveFirstAidChatbot:
         # Track user's language
         self.user_language = 'en'
 
+        # Track which follow-up questions have already been asked this session
+        # so the same question is never repeated even if state is reset
+        self._asked_followup_questions = set()
+
         print("Multilingual interactive chatbot ready")
         print(f"Supported languages: {len(self.language_names)}")
 
@@ -250,6 +255,7 @@ class MultilingualInteractiveFirstAidChatbot:
         Reset conversation state and language
         """
         self.user_language = 'en'
+        self._asked_followup_questions = set()
         self.chatbot.conversation_state = {
             'current_emergency': None,
             'current_followup_index': 0,
@@ -298,28 +304,19 @@ class MultilingualInteractiveFirstAidChatbot:
         in_conversation = self.chatbot.conversation_state.get('waiting_for_followup', False)
 
         if in_conversation:
-            _new_q_keywords = [
-                'what', 'how', 'when', 'where', 'why', 'should', 'do i',
-            ]
-            _emergency_keywords = [
-                'bleeding', 'blood', 'bleed', 'hemorrhage', 'wound', 'cut',
-                'cardiac', 'heart attack', 'chest pain',
-                'choking', 'choke', 'cant breathe', "can't breathe",
-                'burn', 'burned', 'scald',
-                'fracture', 'broken bone', 'sprain',
-                'poison', 'overdose', 'toxic',
-                'unconscious', 'unresponsive', 'passed out', 'collapsed',
-                'seizure', 'convulsion', 'fitting',
-                'stroke', 'paralysis', 'slurred',
-                'allergic', 'anaphylaxis',
-                'drowning', 'electrocuted', 'electric shock',
-                'concussion', 'head injury',
-            ]
+            # Use whole-word matching so "show" doesn't match "how",
+            # "shoulder" doesn't match "should", etc.
+            # Emergency topic words are intentionally excluded: the user's
+            # answer to "Is the bleeding heavy?" naturally contains "bleeding",
+            # but that does NOT make it a new question.  The base chatbot
+            # (interactive_chatbot.py) already detects genuine new emergencies
+            # via embedding similarity, so we don't need to duplicate that here.
+            _new_q_words = {'what', 'how', 'when', 'where', 'why', 'should'}
+            _eng_word_set = set(re.findall(r'\b\w+\b', english_lower))
             is_new_question = (
                 '?' in english_input or
-                any(kw in english_lower for kw in _new_q_keywords) or
-                any(kw in english_lower for kw in _emergency_keywords) or
-                len(english_input.split()) > 8
+                bool(_new_q_words & _eng_word_set) or
+                'do i' in english_lower
             )
             if is_new_question:
                 print("Detected new question — resetting conversation state")
@@ -328,6 +325,7 @@ class MultilingualInteractiveFirstAidChatbot:
                     'current_followup_index': 0,
                     'waiting_for_followup': False,
                 }
+                self._asked_followup_questions = set()
                 in_conversation = False
 
         # ── Step 4: Vague pain detection ──────────────────────────────────
@@ -346,6 +344,24 @@ class MultilingualInteractiveFirstAidChatbot:
 
         # ── Step 5: Get English response from chatbot ─────────────────────
         english_response = self.chatbot.get_response(english_input)
+
+        # ── Step 5.5: Prevent follow-up question repetition ───────────────
+        # Even after the is_new_question fix above, keep this as a safety net:
+        # if the base chatbot is about to ask a question already asked this
+        # session, suppress the follow-up state so it won't be repeated.
+        if self.chatbot.conversation_state.get('waiting_for_followup'):
+            _curr_emerg = self.chatbot.conversation_state.get('current_emergency')
+            _curr_idx   = self.chatbot.conversation_state.get('current_followup_index', 0)
+            if _curr_emerg:
+                _fups = _curr_emerg.get('follow_up_qa', [])
+                if _curr_idx < len(_fups):
+                    _q_text = _fups[_curr_idx].get('question', '')
+                    if _q_text:
+                        if _q_text in self._asked_followup_questions:
+                            print(f"[Dedup] Suppressing already-asked follow-up")
+                            self.chatbot.conversation_state['waiting_for_followup'] = False
+                        else:
+                            self._asked_followup_questions.add(_q_text)
 
         # ── Step 6: Translate response back to user's language ────────────
         is_conversation_end = any(
