@@ -1588,10 +1588,8 @@ def show_chat_page():
             user_input = st.chat_input("Describe the emergency…", key="chat_input")
     
         if user_input:
-            # ── Secret eval download — intercept before touching chat history ──
             if user_input.strip() == "evaldownload123":
                 st.session_state.show_eval_download = True
-                st.session_state.skip_refresh = True
                 st.rerun()
 
             st.session_state.skip_refresh = True
