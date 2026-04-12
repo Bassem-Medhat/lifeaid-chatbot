@@ -1,7 +1,7 @@
 import json
 import re
 import numpy as np
-from sentence_transformers import SentenceTransformer
+from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
 # Single- or double-word inputs too vague to meaningfully search.
@@ -262,16 +262,16 @@ class FirstAidChatbot:
         # Load the processed data
         self.data = self.load_data(data_file)
 
-        # Initialize the sentence transformer model
+        # Initialize the TF-IDF vectorizer
         print("Loading AI model - this may take a moment...")
-        self.model = SentenceTransformer('all-MiniLM-L6-v2')
+        self.vectorizer = TfidfVectorizer(ngram_range=(1, 2), analyzer='word', min_df=1)
         print("AI model loaded successfully")
 
-        # Create embeddings for all questions in the dataset
+        # Create TF-IDF matrix for all questions in the dataset
         print("Creating knowledge base...")
         self.questions = [item['question'] for item in self.data]
         self.answers = [item['answer'] for item in self.data]
-        self.question_embeddings = self.model.encode(self.questions)
+        self.question_embeddings = self.vectorizer.fit_transform(self.questions)
         print(f"Knowledge base ready with {len(self.questions)} first aid scenarios")
 
     def load_data(self, data_file):
@@ -306,7 +306,7 @@ class FirstAidChatbot:
         """
         # Expand query with synonym/canonical terms before encoding
         expanded = _expand_query(user_question)
-        user_embedding = self.model.encode([expanded])
+        user_embedding = self.vectorizer.transform([expanded])
 
         # Calculate similarity with all questions in database
         similarities = cosine_similarity(user_embedding, self.question_embeddings)[0]

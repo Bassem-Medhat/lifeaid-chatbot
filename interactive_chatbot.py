@@ -1,6 +1,6 @@
 import json
 import numpy as np
-from sentence_transformers import SentenceTransformer
+from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 from chatbot_engine import _VAGUE_INPUTS, _expand_query, _BLUE_CYANOSIS_CONTEXT, _BLUE_BANDAGE_EXCLUSIONS
 
@@ -13,11 +13,11 @@ class InteractiveFirstAidChatbot:
         self.data = self.load_data(data_file)
 
         print("Loading AI model...")
-        self.model = SentenceTransformer('all-MiniLM-L6-v2')
+        self.vectorizer = TfidfVectorizer(ngram_range=(1, 2), analyzer='word', min_df=1)
 
         print("Creating knowledge base...")
         self.questions = [item['question'] for item in self.data]
-        self.question_embeddings = self.model.encode(self.questions)
+        self.question_embeddings = self.vectorizer.fit_transform(self.questions)
 
         self.conversation_state = {
             'current_emergency': None,
@@ -46,7 +46,7 @@ class InteractiveFirstAidChatbot:
 
         # Expand query with synonym/canonical terms before encoding
         expanded = _expand_query(user_question)
-        user_embedding = self.model.encode([expanded])
+        user_embedding = self.vectorizer.transform([expanded])
         similarities = cosine_similarity(user_embedding, self.question_embeddings)[0]
 
         best_match_idx = np.argmax(similarities)
