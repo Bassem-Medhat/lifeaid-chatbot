@@ -1,6 +1,10 @@
 import streamlit as st
 import datetime
 import time
+import io
+import openpyxl
+from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+from openpyxl.utils import get_column_letter
 from streamlit_autorefresh import st_autorefresh
 from multilingual_interactive_chatbot import MultilingualInteractiveFirstAidChatbot
 import auth
@@ -367,10 +371,6 @@ def clean_response(text):
 
 def _build_eval_excel() -> bytes:
     """Build the evaluation workbook in memory and return raw bytes for download."""
-    import io
-    import openpyxl
-    from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
-    from openpyxl.utils import get_column_letter
 
     summary = _get_summary()
     wb = openpyxl.Workbook()
@@ -1423,6 +1423,16 @@ def show_chat_page():
                     direction = "rtl" if is_arabic else "ltr"
                     text_align = "right" if is_arabic else "left"
                     severity = message.get('severity', 'normal')
+                    # Follow-up replies (responses to the user's answers to
+                    # follow-up questions) should not inherit the severity color.
+                    # They are identified by starting with "📋" or containing
+                    # the "more specific guidance" transition phrase.
+                    _is_followup_reply = (
+                        content.lstrip().startswith('📋')
+                        or 'To give you more specific guidance' in content
+                    )
+                    if _is_followup_reply:
+                        severity = 'normal'
                     formatted = content.replace('\n\n', '<br><br>').replace('\n', '<br>')
     
                     content_hash = hashlib.md5(content.encode()).hexdigest()[:8]
