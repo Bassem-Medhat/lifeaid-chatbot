@@ -608,11 +608,11 @@ def text_to_speech_button(text, message_id):
 def handle_quick_help(topic):
     _topics = {
         'bleeding': dict(
-            query='What to do for severe bleeding?',
+            query='What are the steps to control bleeding from a wound?',
             timer=None, default_sev='urgent',
         ),
         'choking': dict(
-            query='What to do if someone is choking?',
+            query='How do I help a choking person?',
             timer=dict(duration=300, title='🫁 Choking Response Timer',
                        instructions='Continue attempts until object dislodges'),
             default_sev='critical',
