@@ -79,7 +79,7 @@ for _k, _v in {
     'chat_history': [], 'active_timer': None, 'timer_start_time': None,
     'timer_paused': False, 'timer_paused_remaining': None,
     'completion_sound_played': False, 'current_chat_saved': False,
-    'dark_mode': False, 'show_settings': False, 'feedback_list': [],
+    'dark_mode': True, 'show_settings': False, 'feedback_list': [],
     'show_emergency_numbers': False, 'feedback_key': 0, 'feedback_submitted': False,
     'show_eval_download': False,
 }.items():
