@@ -757,7 +757,7 @@ def show_landing_page():
         )
         _dl = (
             '<div style="display:flex;align-items:center;gap:6px;">'
-            '<span style="font-size:16px;line-height:1;">&#9977;&#65039;</span>'
+            '<span style="font-size:16px;line-height:1;">&#9937;&#65039;</span>'
             '<div style="background:rgba(255,255,255,0.09);border:1px solid rgba(255,255,255,0.14);'
             'border-radius:12px 12px 12px 2px;padding:6px 11px;display:inline-flex;gap:4px;align-items:center;">'
             '<span class="la-dot" style="animation-delay:0s"></span>'
@@ -773,7 +773,7 @@ def show_landing_page():
             + f'<div style="background:rgba(10,18,40,0.7);border:1px solid rgba(255,255,255,0.12);border-radius:14px;overflow:hidden;">'
             # chat header
             + f'<div style="padding:0.8rem 1rem 0.7rem;border-bottom:1px solid rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:space-between;">'
-            + f'<span style="font-size:14px;font-weight:700;color:{HT};">&#9977;&#65039; LifeAid</span>'
+            + f'<span style="font-size:14px;font-weight:700;color:{HT};">&#9937;&#65039; LifeAid</span>'
             + f'<span style="font-size:11px;font-weight:600;color:#4ade80;">&#x25CF; Online</span>'
             + '</div>'
             # messages area
@@ -791,7 +791,7 @@ def show_landing_page():
             # ── bot message 1 (CRITICAL) ──
             + f'<div style="overflow:hidden;animation:la-bm1 15s ease-in-out infinite;">'
             + f'<div style="display:flex;align-items:flex-start;gap:5px;">'
-            + f'<span style="font-size:16px;flex-shrink:0;padding-top:1px;">&#9977;&#65039;</span>'
+            + f'<span style="font-size:16px;flex-shrink:0;padding-top:1px;">&#9937;&#65039;</span>'
             + f'<div><p style="margin:0 0 3px;font-size:10px;font-weight:700;color:#fca5a5;letter-spacing:0.06em;">&#128680; CRITICAL EMERGENCY</p>'
             + f'<div style="background:rgba(239,68,68,0.16);border:1px solid rgba(239,68,68,0.36);'
             + f'border-radius:12px 12px 12px 2px;padding:7px 10px;font-size:11px;color:{HT};line-height:1.6;">'
@@ -811,7 +811,7 @@ def show_landing_page():
             # ── bot message 2 ──
             + f'<div style="overflow:hidden;animation:la-bm2 15s ease-in-out infinite;">'
             + f'<div style="display:flex;align-items:flex-start;gap:5px;">'
-            + f'<span style="font-size:16px;flex-shrink:0;padding-top:1px;">&#9977;&#65039;</span>'
+            + f'<span style="font-size:16px;flex-shrink:0;padding-top:1px;">&#9937;&#65039;</span>'
             + f'<div style="background:rgba(255,255,255,0.09);border:1px solid rgba(255,255,255,0.14);'
             + f'border-radius:12px 12px 12px 2px;padding:7px 10px;font-size:11px;color:{HT};line-height:1.6;">'
             + 'Call 911 immediately and start CPR.<br>'
