@@ -1422,16 +1422,13 @@ def show_chat_page():
                     is_arabic = any('\u0600' <= c <= '\u06FF' for c in content)
                     direction = "rtl" if is_arabic else "ltr"
                     text_align = "right" if is_arabic else "left"
-                    severity = message.get('severity', 'normal')
-                    # Follow-up replies (responses to the user's answers to
-                    # follow-up questions) should not inherit the severity color.
-                    # They are identified by starting with "📋" or containing
-                    # the "more specific guidance" transition phrase.
-                    _is_followup_reply = (
-                        content.lstrip().startswith('📋')
-                        or 'To give you more specific guidance' in content
-                    )
-                    if _is_followup_reply:
+                    if '🚨 CRITICAL' in content:
+                        severity = 'critical'
+                    elif '⚠️ URGENT' in content:
+                        severity = 'urgent'
+                    elif '🟢 MODERATE' in content:
+                        severity = 'moderate'
+                    else:
                         severity = 'normal'
                     formatted = content.replace('\n\n', '<br><br>').replace('\n', '<br>')
     
