@@ -1434,9 +1434,16 @@ def show_chat_page():
         for idx, message in enumerate(st.session_state.chat_history):
             if message['role'] == 'user':
                 with st.chat_message("user", avatar="👤"):
+                    _usr_bg  = '#1F6FEB' if _DK else '#0969DA'
+                    _usr_txt = '#FFFFFF'
                     st.markdown(
-                        f"<div style='color:{_C['text']}; word-wrap:break-word; font-size:14px;'>"
-                        f"{message['content']}</div>",
+                        f"<div style='display:flex; justify-content:flex-end;'>"
+                        f"<div style='background:{_usr_bg}; color:{_usr_txt};"
+                        f" padding:0.65rem 1rem; border-radius:18px 18px 4px 18px;"
+                        f" max-width:82%; word-wrap:break-word; overflow-wrap:break-word;"
+                        f" font-size:14px; line-height:1.65;"
+                        f" box-shadow:0 2px 8px rgba(0,0,0,0.20);'>"
+                        f"{message['content']}</div></div>",
                         unsafe_allow_html=True,
                     )
             else:
@@ -1491,16 +1498,18 @@ def show_chat_page():
                             f"box-shadow:0 4px 16px rgba(34,197,94,0.35);"
                         ),
                         'normal': (
-                            f"background:transparent;"
-                            f"border:none;"
+                            f"background:{'#2D333B' if _DK else '#ECEAE4'};"
+                            f"border:1px solid {'#444C56' if _DK else '#D4D0C8'};"
                             f"color:{'#E6EDF3' if _DK else '#1E293B'};"
+                            f"box-shadow:0 2px 8px rgba(0,0,0,{'0.20' if _DK else '0.07'});"
                         ),
                     }
                     style = sev_styles.get(severity, sev_styles['normal'])
-    
+                    _radius = '18px 18px 18px 4px' if severity == 'normal' else '12px'
+
                     st.markdown(f"""
                     <div style="{style}
-                                 padding:1rem 1.25rem; border-radius:12px;
+                                 padding:1rem 1.25rem; border-radius:{_radius};
                                  word-wrap:break-word; overflow-wrap:break-word;
                                  line-height:1.75; font-size:14px;
                                  direction:{direction}; text-align:{text_align};">
