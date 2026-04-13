@@ -1433,19 +1433,21 @@ def show_chat_page():
     
         for idx, message in enumerate(st.session_state.chat_history):
             if message['role'] == 'user':
-                with st.chat_message("user", avatar="👤"):
-                    _usr_bg  = '#1F6FEB' if _DK else '#0969DA'
-                    _usr_txt = '#FFFFFF'
-                    st.markdown(
-                        f"<div style='display:flex; justify-content:flex-end;'>"
-                        f"<div style='background:{_usr_bg}; color:{_usr_txt};"
-                        f" padding:0.65rem 1rem; border-radius:18px 18px 4px 18px;"
-                        f" max-width:82%; word-wrap:break-word; overflow-wrap:break-word;"
-                        f" font-size:14px; line-height:1.65;"
-                        f" box-shadow:0 2px 8px rgba(0,0,0,0.20);'>"
-                        f"{message['content']}</div></div>",
-                        unsafe_allow_html=True,
-                    )
+                _usr_bg  = '#1F6FEB' if _DK else '#0969DA'
+                _usr_txt = '#FFFFFF'
+                st.markdown(
+                    f"<div style='display:flex; justify-content:flex-end;"
+                    f" align-items:flex-end; gap:8px; margin:4px 0;'>"
+                    f"<div style='background:{_usr_bg}; color:{_usr_txt};"
+                    f" padding:0.65rem 1rem; border-radius:18px 18px 4px 18px;"
+                    f" max-width:82%; word-wrap:break-word; overflow-wrap:break-word;"
+                    f" font-size:14px; line-height:1.65;"
+                    f" box-shadow:0 2px 8px rgba(0,0,0,0.20);'>"
+                    f"{message['content']}</div>"
+                    f"<div style='font-size:22px; flex-shrink:0; line-height:1;'>👤</div>"
+                    f"</div>",
+                    unsafe_allow_html=True,
+                )
             else:
                 with st.chat_message("assistant", avatar="⛑️"):
                     content = clean_response(message['content'])
