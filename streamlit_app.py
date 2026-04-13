@@ -1068,6 +1068,29 @@ def show_chat_page():
     }
     </style>
     """, unsafe_allow_html=True)
+
+    # ── Chat panel card styling ────────────────────────────────────────────────
+    _chat_card_bg     = '#161B22' if _DK else '#FFFFFF'
+    _chat_card_border = '#30363D' if _DK else '#C8C4BC'
+    _chat_card_shadow = ('0 4px 24px rgba(0,0,0,0.40), 0 1px 4px rgba(0,0,0,0.25)'
+                         if _DK else
+                         '0 4px 24px rgba(0,0,0,0.10), 0 1px 4px rgba(0,0,0,0.06)')
+    st.markdown(f"""
+    <style>
+    /* Right panel (chat area) — card/panel frame */
+    .main .block-container
+      > div[data-testid="stVerticalBlock"]
+      > div[data-testid="stHorizontalBlock"]
+      > div[data-testid="column"]:last-child {{
+        background: {_chat_card_bg} !important;
+        border: 1.5px solid {_chat_card_border} !important;
+        border-radius: 14px !important;
+        box-shadow: {_chat_card_shadow} !important;
+        padding: 1.1rem 1.4rem 1.25rem !important;
+    }}
+    </style>
+    """, unsafe_allow_html=True)
+
     left_col, right_col = st.columns([1, 4])
 
     # ── Left panel (fake sidebar) ──────────────────────────────────────────────
