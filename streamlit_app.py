@@ -863,7 +863,7 @@ def show_landing_page():
     for col, (icon, title, desc) in zip(fc, features):
         with col:
             st.markdown(f"""
-<div style="background:{_C['card']};border:1px solid {_C['border']};border-radius:14px;padding:1.4rem 1rem;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,0.05);">
+<div style="background:{_C['card']};border:1px solid {_C['border']};border-radius:14px;padding:1.4rem 1rem;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,0.05);min-height:200px;height:100%;display:flex;flex-direction:column;justify-content:center;align-items:center;">
   <div style="font-size:34px;margin-bottom:0.65rem;">{icon}</div>
   <p style="margin:0 0 0.4rem;font-size:13px;font-weight:700;color:{_C['text']};line-height:1.35;">{title}</p>
   <p style="margin:0;font-size:11px;color:{_C['muted']};line-height:1.5;">{desc}</p>
