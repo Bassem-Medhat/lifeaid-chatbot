@@ -4,7 +4,7 @@ import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 from chatbot_engine import (
-    _VAGUE_INPUTS, _expand_query,
+    _VAGUE_INPUTS, _expand_query, _extract_core_query,
     _BLUE_CYANOSIS_CONTEXT, _BLUE_BANDAGE_EXCLUSIONS,
     _apply_priority_boost, _detect_emergency_categories,
     _build_doc_text,
@@ -54,10 +54,19 @@ class InteractiveFirstAidChatbot:
         if not self.questions:
             return None, 0
 
-        # Expand query with synonym/canonical terms before encoding
-        expanded = _expand_query(user_question)
-        user_embedding = self.vectorizer.transform([expanded])
-        similarities = cosine_similarity(user_embedding, self.question_embeddings)[0]
+        # --- Path A: full query -----------------------------------------------
+        expanded_full = _expand_query(user_question)
+        emb_full = self.vectorizer.transform([expanded_full])
+        sims_full = cosine_similarity(emb_full, self.question_embeddings)[0]
+
+        # --- Path B: core query (filler stripped, then expanded) ---------------
+        core_text = _extract_core_query(user_question)
+        expanded_core = _expand_query(core_text)
+        emb_core = self.vectorizer.transform([expanded_core])
+        sims_core = cosine_similarity(emb_core, self.question_embeddings)[0]
+
+        # Element-wise max: whichever representation scored higher wins
+        similarities = np.maximum(sims_full, sims_core)
 
         # Apply 2× priority boost for critical emergency keywords
         similarities = _apply_priority_boost(
