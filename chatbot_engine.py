@@ -22,6 +22,38 @@ _VAGUE_INPUTS = {
     'accident', 'need', 'happening', 'wrong',
 }
 
+# Conversational filler words removed when building the core query.
+# Only used in _extract_core_query — trigger detection always runs on the
+# original text so no emergency keywords are accidentally stripped.
+_QUERY_STOPWORDS = frozenset({
+    # Personal pronouns
+    'i', 'me', 'my', 'myself', 'we', 'our', 'ours',
+    'you', 'your', 'he', 'him', 'his', 'she', 'her',
+    'they', 'them', 'their', 'it', 'its',
+    # Articles
+    'a', 'an', 'the',
+    # Prepositions
+    'of', 'in', 'on', 'at', 'to', 'for', 'with',
+    'from', 'by', 'into', 'onto', 'upon',
+    # Auxiliaries
+    'is', 'am', 'are', 'was', 'were', 'be', 'been', 'being',
+    'have', 'has', 'had', 'will', 'would', 'shall',
+    # Question starters
+    'what', 'how', 'when', 'where', 'why', 'who', 'which',
+    # Connectors / fillers
+    'if', 'so', 'then', 'and', 'or', 'but',
+    'that', 'this', 'these', 'those',
+    'there', 'here', 'just', 'also', 'too',
+    'very', 'really', 'quite', 'please',
+    # Light verbs that add noise without meaning
+    'do', 'does', 'did', 'get', 'got', 'go', 'went', 'going',
+    'make', 'made', 'come', 'came', 'see', 'saw',
+    'think', 'thought', 'want', 'need',
+    # Quantifiers
+    'some', 'any', 'all', 'much', 'many', 'lot', 'lots',
+    'more', 'most', 'every', 'each',
+})
+
 # Maps a canonical emergency phrase to informal/synonym trigger words.
 # When any trigger appears in the user's query the canonical phrase is
 # appended before encoding, pulling the embedding toward the right entry.
@@ -33,6 +65,10 @@ _KEYWORD_EXPANSIONS = {
         'no heartbeat', 'no pulse', 'not responding', 'lifeless',
         'not moving', 'fell down not breathing', 'dropped dead',
         'not waking', 'wont wake',
+        # Additional symptom descriptions
+        'jaw pain', 'left arm pain', 'pain down arm',
+        'pressure in chest', 'tightness in chest', 'squeezing in chest',
+        'pain radiating', 'radiating to arm',
     ],
     'choking airway blocked cyanosis': [
         'choke', 'choking', 'cant breathe', "can't breathe", 'cannot breathe',
@@ -46,6 +82,10 @@ _KEYWORD_EXPANSIONS = {
         'blue face', 'face is blue', 'face turning blue',
         'skin is blue', 'skin turning blue', 'blue skin',
         'cyanosis', 'looks blue', 'appear blue',
+        # Breathing difficulty descriptions
+        'difficulty breathing', 'trouble breathing', 'hard to breathe',
+        'struggling to breathe', 'labored breathing',
+        'gagging', 'keeps gagging',
     ],
     'severe bleeding wound': [
         'bleed', 'bleeding', 'blood', 'hemorrhage', 'hemorrhaging',
@@ -63,11 +103,19 @@ _KEYWORD_EXPANSIONS = {
         'coffee burn', 'tea burn', 'cooking burn',
         'steam burn', 'hot surface', 'hot plate', 'oven burn', 'iron burn',
         'touched hot', 'contact burn',
+        # Symptom-first descriptions
+        'blistering', 'blistered', 'skin blistering', 'skin burned',
+        'red and burning', 'burning skin', 'skin on fire',
     ],
     'broken bone fracture': [
         'fracture', 'fractured', 'broken bone', 'break bone', 'broke bone',
         'snapped bone', 'cracked bone', 'sprain', 'sprained',
         'bone sticking out', 'bone deformity', 'twisted',
+        # Body-part specific broken descriptions
+        'broken arm', 'broken leg', 'broken wrist', 'broken ankle', 'broken foot',
+        'broke arm', 'broke leg',
+        # Auditory cues
+        'heard a crack', 'heard a snap', 'heard a pop', 'bone crack',
     ],
     'allergic reaction anaphylaxis': [
         'allergy', 'allergic', 'anaphylaxis', 'anaphylactic shock',
@@ -77,6 +125,14 @@ _KEYWORD_EXPANSIONS = {
         "can't swallow", 'cannot swallow', 'hives everywhere',
         'throat swelling', 'lips swelling', 'face swelling',
         'severe reaction', 'allergic emergency',
+        # Standalone sting words
+        'stung', 'sting on',
+        # Swollen word-order variants (symptom word first)
+        'swollen face', 'face swollen', 'swollen lips', 'lips swollen',
+        'swollen throat', 'throat swollen', 'throat tight',
+        # Additional triggers
+        'itching all over', 'severe itching', 'peanut allergy',
+        'food allergy reaction', 'allergic to food',
     ],
     'poisoning overdose': [
         'poison', 'poisoning', 'poisoned', 'toxic', 'toxin',
@@ -87,6 +143,10 @@ _KEYWORD_EXPANSIONS = {
         'unconscious', 'passed out', 'fainted', 'fainting', 'unresponsive',
         'knocked out', 'not waking up', 'wont wake up', 'collapse',
         'collapsed', 'blackout', 'black out', 'lost consciousness',
+        # Limp / not moving / unresponsive descriptions
+        'limp', 'went limp', 'body limp', 'gone limp',
+        'not moving', 'stopped moving',
+        'not responding to', 'not reacting',
     ],
     'seizure convulsion': [
         'seizure', 'convulsion', 'convulsing', 'fitting', 'fits',
@@ -382,9 +442,44 @@ def _expand_query(user_question):
                             already_matched.add(canonical)
                             break
 
+    # Phase 3: Word-overlap matching — all words of a multi-word trigger appear
+    # in the query regardless of order or intervening words.
+    # Handles reordered phrases:
+    #   "pressure in my chest"    → {"chest","pressure"} ⊆ query → cardiac
+    #   "throat is swelling"      → {"throat","swelling"} ⊆ query → anaphylaxis
+    #   "she hit her head"        → {"hit","head"} ⊆ query → head injury
+    query_word_set = set(re.findall(r'\b[a-z]+\b', lower))
+    for canonical, triggers in _KEYWORD_EXPANSIONS.items():
+        if canonical in already_matched:
+            continue
+        for trigger in triggers:
+            trigger_words = set(re.findall(r'\b[a-z]+\b', trigger.lower()))
+            if len(trigger_words) >= 2 and trigger_words.issubset(query_word_set):
+                additions.append(canonical)
+                already_matched.add(canonical)
+                break
+
     if additions:
         return user_question + ' ' + ' '.join(additions)
     return user_question
+
+
+def _extract_core_query(text):
+    """Strip conversational filler, returning only emergency-relevant tokens.
+
+    Converts natural-language descriptions into focused vocabulary that scores
+    better in TF-IDF matching.  Used alongside the full query — both are scored
+    and the element-wise maximum is taken so neither representation is lost.
+
+    Examples:
+      "I spilled boiling water on my hand"   → "spilled boiling water hand"
+      "what do I do if someone is choking?"  → "choking"
+      "she hit her head on the table"        → "hit head table"
+      "there is a lot of blood from my arm"  → "blood arm"
+    """
+    words = re.findall(r'\b[A-Za-z]+\b', text)
+    core = [w for w in words if w.lower() not in _QUERY_STOPWORDS]
+    return ' '.join(core) if core else text
 
 
 def _build_doc_text(item):
@@ -502,12 +597,22 @@ class FirstAidChatbot:
         Returns:
             dict: Contains answer, confidence, matched_question, found, low_confidence
         """
-        # Expand query with synonym/canonical terms before encoding
-        expanded = _expand_query(user_question)
-        user_embedding = self.vectorizer.transform([expanded])
+        # --- Path A: full query (original behaviour) -------------------------
+        expanded_full = _expand_query(user_question)
+        emb_full = self.vectorizer.transform([expanded_full])
+        sims_full = cosine_similarity(emb_full, self.question_embeddings)[0]
 
-        # Calculate similarity with all questions in database
-        similarities = cosine_similarity(user_embedding, self.question_embeddings)[0]
+        # --- Path B: core query (filler stripped, then expanded) -------------
+        # Removing pronouns/articles/auxiliaries tightens the L2 norm around
+        # the emergency-relevant terms, raising cosine scores for natural
+        # language like "I spilled boiling water on my hand".
+        core_text = _extract_core_query(user_question)
+        expanded_core = _expand_query(core_text)
+        emb_core = self.vectorizer.transform([expanded_core])
+        sims_core = cosine_similarity(emb_core, self.question_embeddings)[0]
+
+        # Element-wise max: whichever representation scored higher wins
+        similarities = np.maximum(sims_full, sims_core)
 
         # Apply 2× priority boost for critical emergency keywords
         similarities = _apply_priority_boost(
