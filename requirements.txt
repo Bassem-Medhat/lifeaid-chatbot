@@ -14,8 +14,9 @@ langdetect==1.0.9
 # ── Document parsing ──────────────────────────────────────────────────────────
 python-docx==1.2.0
 
-# ── Spell correction ──────────────────────────────────────────────────────────
+# ── Spell correction & fuzzy matching ────────────────────────────────────────
 pyspellchecker
+rapidfuzz
 
 # ── Excel export (chatbot_evaluator.py) ───────────────────────────────────────
 openpyxl

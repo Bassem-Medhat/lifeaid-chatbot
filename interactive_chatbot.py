@@ -2,7 +2,11 @@ import json
 import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
-from chatbot_engine import _VAGUE_INPUTS, _expand_query, _BLUE_CYANOSIS_CONTEXT, _BLUE_BANDAGE_EXCLUSIONS
+from chatbot_engine import (
+    _VAGUE_INPUTS, _expand_query,
+    _BLUE_CYANOSIS_CONTEXT, _BLUE_BANDAGE_EXCLUSIONS,
+    _apply_priority_boost, _detect_emergency_categories,
+)
 
 
 class InteractiveFirstAidChatbot:
@@ -22,7 +26,8 @@ class InteractiveFirstAidChatbot:
         self.conversation_state = {
             'current_emergency': None,
             'current_followup_index': 0,
-            'waiting_for_followup': False
+            'waiting_for_followup': False,
+            'last_bot_message': '',
         }
 
         self.last_matched_emergency = None
@@ -48,6 +53,11 @@ class InteractiveFirstAidChatbot:
         expanded = _expand_query(user_question)
         user_embedding = self.vectorizer.transform([expanded])
         similarities = cosine_similarity(user_embedding, self.question_embeddings)[0]
+
+        # Apply 2× priority boost for critical emergency keywords
+        similarities = _apply_priority_boost(
+            similarities, user_question, self.vectorizer, self.question_embeddings
+        )
 
         best_match_idx = np.argmax(similarities)
         best_score = similarities[best_match_idx]
@@ -207,9 +217,18 @@ class InteractiveFirstAidChatbot:
         return None
 
     def get_response(self, user_input):
+        """Get chatbot response with follow-up question handling.
+
+        Thin public wrapper that records the reply in conversation_state so the
+        smarter follow-up detector can inspect whether the last bot message was a
+        question.
         """
-        Get chatbot response with follow-up question handling
-        """
+        response = self._get_response(user_input)
+        self.conversation_state['last_bot_message'] = response
+        return response
+
+    def _get_response(self, user_input):
+        """Internal implementation of get_response."""
         user_input = user_input.strip()
 
         if not user_input:
@@ -231,6 +250,7 @@ class InteractiveFirstAidChatbot:
                 'current_emergency': None,
                 'current_followup_index': 0,
                 'waiting_for_followup': False,
+                'last_bot_message': '',
             }
             override_data = self._get_cyanosis_answer()
             if override_data:
@@ -256,7 +276,6 @@ class InteractiveFirstAidChatbot:
 
         # Only treat as thanks if it's clearly a thank you message
         if any(word in user_lower for word in thanks) and len(user_input.split()) <= 5:
-            # Reset conversation state when user says thanks
             self.conversation_state['current_emergency'] = None
             self.conversation_state['waiting_for_followup'] = False
             self.conversation_state['current_followup_index'] = 0
@@ -264,41 +283,67 @@ class InteractiveFirstAidChatbot:
 
         # Only treat as goodbye if clearly leaving
         if any(word in user_lower for word in goodbyes) and len(user_input.split()) <= 4:
-            # Reset conversation state when user says goodbye
             self.conversation_state['current_emergency'] = None
             self.conversation_state['waiting_for_followup'] = False
             self.conversation_state['current_followup_index'] = 0
             return "Stay safe! Take care."
 
-        # Before handling follow-up answers, check whether the user is actually
-        # describing a new emergency rather than answering the pending question.
-        # Clear yes/no-style answers are always treated as follow-ups.
-        # Anything else is checked against the knowledge base: if it matches a
-        # known emergency with reasonable confidence it is a new question.
+        # ── Smarter follow-up detection ──────────────────────────────────────
+        # Four ordered rules determine whether the current message is a follow-up
+        # answer or the start of a new emergency question.
         if self.conversation_state['waiting_for_followup']:
-            _clear_followup_starters = [
-                'yes', 'no', 'yeah', 'nope', 'sure', 'ok', 'okay', 'right',
-                'correct', 'fine', 'alright', 'yep', 'yup', 'got it',
-                'understood', 'not really', 'kind of', 'sort of', 'i think',
-                'maybe', 'possibly', 'not sure', 'i guess',
-                'نعم', 'لا', 'اه', 'ايوه',
-            ]
-            _is_clear_followup = (
-                any(user_lower.startswith(w) for w in _clear_followup_starters)
-                or len(user_input.split()) == 1
-            )
-            if not _is_clear_followup and len(user_input.split()) >= 2:
-                _candidate, _score = self.find_best_match(user_input, threshold=0.0)
-                _current = self.conversation_state.get('current_emergency')
-                if (_candidate is not None and _score >= 0.40
-                        and _current is not _candidate):
-                    # Semantically close to a DIFFERENT emergency — treat as new question.
-                    # If the best match is the same entry already being discussed,
-                    # the user is answering the follow-up (e.g. "the bleeding is heavy"),
-                    # not starting a new query, so state must NOT be reset.
+            word_count = len(user_input.split())
+            last_bot_msg = self.conversation_state.get('last_bot_message', '')
+
+            # Rule A (highest priority): user mentions a DIFFERENT emergency category
+            # → always treat as new question, regardless of message length.
+            user_cats = _detect_emergency_categories(user_input)
+            current_emergency_entry = self.conversation_state.get('current_emergency')
+            if user_cats and current_emergency_entry:
+                current_q = current_emergency_entry.get('question', '')
+                current_cats = _detect_emergency_categories(current_q)
+                if not (user_cats & current_cats):
+                    # Completely different emergency → reset and fall through
                     self.conversation_state['current_emergency'] = None
                     self.conversation_state['waiting_for_followup'] = False
                     self.conversation_state['current_followup_index'] = 0
+
+            # Only continue as a follow-up if state is still active after Rule A
+            if self.conversation_state['waiting_for_followup']:
+                _clear_followup_starters = [
+                    'yes', 'no', 'yeah', 'nope', 'sure', 'ok', 'okay', 'right',
+                    'correct', 'fine', 'alright', 'yep', 'yup', 'got it',
+                    'understood', 'not really', 'kind of', 'sort of', 'i think',
+                    'maybe', 'possibly', 'not sure', 'i guess',
+                    'نعم', 'لا', 'اه', 'ايوه',
+                ]
+
+                # Rule B: short answers (< 5 words) or pure numbers → always follow-up
+                _is_short = (
+                    word_count < 5
+                    or user_lower.strip().rstrip('.!?').isdigit()
+                )
+                # Rule C: starts with a typical yes/no/qualifier word → follow-up
+                _starts_with_followup = any(
+                    user_lower.startswith(w) for w in _clear_followup_starters
+                )
+                # Rule D: last bot message was a question and reply is ≤8 words → likely follow-up
+                _last_was_question = last_bot_msg.rstrip().endswith('?')
+                _is_clear_followup = (
+                    _is_short
+                    or _starts_with_followup
+                    or (_last_was_question and word_count <= 8)
+                )
+
+                if not _is_clear_followup and word_count >= 2:
+                    # Score-based fallback for longer messages with no clear signal
+                    _candidate, _score = self.find_best_match(user_input, threshold=0.0)
+                    _current = self.conversation_state.get('current_emergency')
+                    if (_candidate is not None and _score >= 0.40
+                            and _current is not _candidate):
+                        self.conversation_state['current_emergency'] = None
+                        self.conversation_state['waiting_for_followup'] = False
+                        self.conversation_state['current_followup_index'] = 0
 
         # Handle follow-up answers
         if self.conversation_state['waiting_for_followup']:

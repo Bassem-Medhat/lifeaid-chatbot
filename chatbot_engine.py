@@ -4,6 +4,15 @@ import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
+# Fuzzy matching for misspellings (optional — falls back gracefully if missing)
+try:
+    from rapidfuzz import fuzz as _rfuzz
+    _RAPIDFUZZ_AVAILABLE = True
+except ImportError:
+    _RAPIDFUZZ_AVAILABLE = False
+
+_FUZZY_THRESHOLD = 80  # minimum similarity % to accept a fuzzy keyword match
+
 # Single- or double-word inputs too vague to meaningfully search.
 # When the entire query consists only of these words, ask for specifics.
 _VAGUE_INPUTS = {
@@ -21,11 +30,16 @@ _KEYWORD_EXPANSIONS = {
         'heart attack', 'cardiac arrest', 'cardiac', 'heart stopped',
         'chest pain', 'chest tightness', 'chest pressure', 'myocardial',
         'heart failure', 'palpitations', 'heart pain',
+        'no heartbeat', 'no pulse', 'not responding', 'lifeless',
+        'not moving', 'fell down not breathing', 'dropped dead',
+        'not waking', 'wont wake',
     ],
     'choking airway blocked cyanosis': [
         'choke', 'choking', 'cant breathe', "can't breathe", 'cannot breathe',
         'airway blocked', 'something stuck throat', 'swallowed wrong way',
         'food stuck', 'throat blocked', 'object in throat',
+        'something stuck', 'face turning red', 'face is red', 'turning red',
+        'cant speak', "can't speak", 'no air', 'gasping',
         # Blue skin / cyanosis — always a breathing or choking emergency
         'turning blue', 'turned blue', 'gone blue', 'going blue',
         'blue lips', 'lips are blue', 'lips turning blue',
@@ -37,6 +51,8 @@ _KEYWORD_EXPANSIONS = {
         'bleed', 'bleeding', 'blood', 'hemorrhage', 'hemorrhaging',
         'cut', 'wound', 'laceration', 'gash', 'slash', 'stabbed',
         'blood loss', 'blood everywhere', 'deep cut',
+        'gushing blood', 'wont stop bleeding', "won't stop bleeding",
+        'bleeding heavily', 'blood pouring', 'spurting blood',
     ],
     'burn injury scald': [
         'burn', 'burned', 'burning', 'burnt', 'scald', 'scalded',
@@ -45,6 +61,8 @@ _KEYWORD_EXPANSIONS = {
         'boiling water', 'boiling', 'hot water', 'hot liquid',
         'spilled hot', 'spilled boiling', 'hot drink',
         'coffee burn', 'tea burn', 'cooking burn',
+        'steam burn', 'hot surface', 'hot plate', 'oven burn', 'iron burn',
+        'touched hot', 'contact burn',
     ],
     'broken bone fracture': [
         'fracture', 'fractured', 'broken bone', 'break bone', 'broke bone',
@@ -56,6 +74,9 @@ _KEYWORD_EXPANSIONS = {
         'hives', 'swollen throat', 'throat closing', 'epipen',
         'bee sting', 'wasp sting', 'insect sting', 'nut allergy',
         'rash swelling',
+        "can't swallow", 'cannot swallow', 'hives everywhere',
+        'throat swelling', 'lips swelling', 'face swelling',
+        'severe reaction', 'allergic emergency',
     ],
     'poisoning overdose': [
         'poison', 'poisoning', 'poisoned', 'toxic', 'toxin',
@@ -71,11 +92,14 @@ _KEYWORD_EXPANSIONS = {
         'seizure', 'convulsion', 'convulsing', 'fitting', 'fits',
         'shaking uncontrollably', 'trembling', 'epilepsy', 'epileptic',
         'twitching', 'body jerking',
+        'epileptic fit', 'body shaking', 'shaking all over', 'grand mal',
     ],
     'stroke': [
         'stroke', 'paralysis', 'face drooping', 'facial droop',
-        'slurred speech', 'sudden weakness', 'arm weakness',
+        'slurred speech', 'speech slurred', 'sudden weakness', 'arm weakness',
         'trouble speaking', 'sudden numbness', 'face numb',
+        'sudden confusion', 'fast test', 'face arm speech time',
+        'one side weak', 'cant lift arm', "can't lift arm",
     ],
     'diabetic emergency hypoglycemia': [
         'diabetic', 'diabetes', 'low blood sugar', 'hypoglycemia',
@@ -107,6 +131,79 @@ _KEYWORD_EXPANSIONS = {
         'twisted wrist', 'rolled ankle',
     ],
 }
+
+
+# ─── Priority keyword boosting ───────────────────────────────────────────────
+
+# Maps a critical trigger phrase to the canonical emergency category it belongs
+# to (must be a key of _KEYWORD_EXPANSIONS).  When any trigger is found in the
+# user query, TF-IDF similarity scores for that emergency category are doubled
+# so the right answer always wins over weaker, less-specific matches.
+_PRIORITY_KEYWORDS = {
+    'choking':           'choking airway blocked cyanosis',
+    'not breathing':     'heart attack cardiac arrest',
+    'unconscious':       'unconscious unresponsive',
+    'no pulse':          'heart attack cardiac arrest',
+    'cardiac arrest':    'heart attack cardiac arrest',
+    'severe bleeding':   'severe bleeding wound',
+    'anaphylaxis':       'allergic reaction anaphylaxis',
+    'stroke':            'stroke',
+    'seizure':           'seizure convulsion',
+    'drowning':          'drowning near drowning',
+    'electrocuted':      'electric shock electrocution',
+    'overdose':          'poisoning overdose',
+    'poisoned':          'poisoning overdose',
+    'collapsed':         'unconscious unresponsive',
+    'turning blue':      'choking airway blocked cyanosis',
+    'heart attack':      'heart attack cardiac arrest',
+    'allergic reaction': 'allergic reaction anaphylaxis',
+    'broken bone':       'broken bone fracture',
+}
+
+
+def _apply_priority_boost(similarities, user_question, vectorizer, question_embeddings):
+    """Multiply similarity scores by 2× for entries matching a detected priority keyword.
+
+    When a critical emergency keyword is found in the user message the entries
+    most relevant to that emergency get a score boost so they always rank above
+    less-specific matches.
+
+    Args:
+        similarities: 1-D numpy array of cosine similarity scores (will be copied).
+        user_question: Raw user query text.
+        vectorizer: The fitted TF-IDF vectorizer.
+        question_embeddings: Sparse matrix of all question embeddings.
+
+    Returns:
+        numpy array with boosted scores (original array is not modified).
+    """
+    lower = user_question.lower()
+    boosted = set()
+    result = similarities.copy()
+    for keyword, canonical in _PRIORITY_KEYWORDS.items():
+        if keyword in lower and canonical not in boosted:
+            canonical_vec = vectorizer.transform([canonical])
+            canonical_sims = cosine_similarity(canonical_vec, question_embeddings)[0]
+            boost_mask = canonical_sims >= 0.20
+            result[boost_mask] *= 2.0
+            boosted.add(canonical)
+    return result
+
+
+def _detect_emergency_categories(text):
+    """Return the set of canonical emergency category keys detected in *text*.
+
+    Uses the same trigger lists as _KEYWORD_EXPANSIONS so the mapping is
+    always consistent.  Used by the interactive chatbot to decide whether
+    a user message is about the SAME or a DIFFERENT emergency than the
+    one currently being discussed.
+    """
+    lower = text.lower()
+    cats = set()
+    for canonical, triggers in _KEYWORD_EXPANSIONS.items():
+        if any(t in lower for t in triggers):
+            cats.add(canonical)
+    return cats
 
 
 # Words that, when appearing alongside "blue" in a message, indicate cyanosis
@@ -241,15 +338,41 @@ def _correct_spelling(text):
 def _expand_query(user_question):
     """Append canonical emergency terms when trigger keywords are detected.
 
-    This gives the sentence-transformer a much better chance of matching
-    the right knowledge-base entry when the user uses informal phrasing
-    or synonyms (e.g. 'blood everywhere' → appends 'severe bleeding wound').
+    Phase 1 — exact/substring matching: if any trigger phrase from
+    _KEYWORD_EXPANSIONS appears in the query, its canonical category is appended.
+
+    Phase 2 — fuzzy matching (requires rapidfuzz): each word in the query that
+    is ≥4 characters long is compared against every single-word trigger at ≥80%
+    similarity.  This catches common misspellings such as:
+      "bleding"  → "bleeding"  → appends "severe bleeding wound"
+      "chokng"   → "choking"   → appends "choking airway blocked cyanosis"
+      "siezure"  → "seizure"   → appends "seizure convulsion"
     """
     lower = user_question.lower()
     additions = []
+    already_matched = set()
+
+    # Phase 1: exact / substring matching (original behaviour)
     for canonical, triggers in _KEYWORD_EXPANSIONS.items():
         if any(t in lower for t in triggers):
             additions.append(canonical)
+            already_matched.add(canonical)
+
+    # Phase 2: fuzzy matching for misspelled words
+    if _RAPIDFUZZ_AVAILABLE:
+        query_words = re.findall(r'\b[a-z]{4,}\b', lower)
+        for word in query_words:
+            for canonical, triggers in _KEYWORD_EXPANSIONS.items():
+                if canonical in already_matched:
+                    continue
+                for trigger in triggers:
+                    # Only fuzzy-compare single-word triggers of meaningful length
+                    if ' ' not in trigger and len(trigger) >= 4:
+                        if _rfuzz.ratio(word, trigger) >= _FUZZY_THRESHOLD:
+                            additions.append(canonical)
+                            already_matched.add(canonical)
+                            break
+
     if additions:
         return user_question + ' ' + ' '.join(additions)
     return user_question
@@ -313,6 +436,11 @@ class FirstAidChatbot:
 
         # Calculate similarity with all questions in database
         similarities = cosine_similarity(user_embedding, self.question_embeddings)[0]
+
+        # Apply 2× priority boost for critical emergency keywords
+        similarities = _apply_priority_boost(
+            similarities, user_question, self.vectorizer, self.question_embeddings
+        )
 
         # Find the best match
         best_match_idx = np.argmax(similarities)
