@@ -158,6 +158,15 @@ _PRIORITY_KEYWORDS = {
     'heart attack':      'heart attack cardiac arrest',
     'allergic reaction': 'allergic reaction anaphylaxis',
     'broken bone':       'broken bone fracture',
+    # Burns — missing from original; 'burn' substring matches burning/burned/burnt/scald
+    'burn':              'burn injury scald',
+    'scald':             'burn injury scald',
+    # Head trauma
+    'head injury':       'head injury concussion',
+    'concussion':        'head injury concussion',
+    # Diabetic emergencies
+    'diabetic':          'diabetic emergency hypoglycemia',
+    'hypoglycemia':      'diabetic emergency hypoglycemia',
 }
 
 
@@ -378,6 +387,24 @@ def _expand_query(user_question):
     return user_question
 
 
+def _build_doc_text(item):
+    """Return the text used to represent a knowledge-base entry in TF-IDF space.
+
+    Combines the question with all keyword strings so that synonyms stored in
+    the keywords field actually influence similarity scores.  Keywords may be
+    stored as newline-separated terms inside a single array element.
+    """
+    q = item.get('question', '')
+    kw_list = item.get('keywords', [])
+    if kw_list:
+        kw_text = ' '.join(
+            kw.replace('\n', ' ') for kw in kw_list if isinstance(kw, str)
+        ).strip()
+        if kw_text:
+            return q + ' ' + kw_text
+    return q
+
+
 class FirstAidChatbot:
     def __init__(self, data_file='processed_data.json'):
         """
@@ -393,11 +420,13 @@ class FirstAidChatbot:
         self.vectorizer = TfidfVectorizer(ngram_range=(1, 2), analyzer='word', min_df=1)
         print("AI model loaded successfully")
 
-        # Create TF-IDF matrix for all questions in the dataset
+        # Create TF-IDF matrix — each document is question + keywords so that
+        # synonyms stored in the keywords field contribute to similarity scoring.
         print("Creating knowledge base...")
         self.questions = [item['question'] for item in self.data]
         self.answers = [item['answer'] for item in self.data]
-        self.question_embeddings = self.vectorizer.fit_transform(self.questions)
+        docs = [_build_doc_text(item) for item in self.data]
+        self.question_embeddings = self.vectorizer.fit_transform(docs)
         print(f"Knowledge base ready with {len(self.questions)} first aid scenarios")
 
     def load_data(self, data_file):

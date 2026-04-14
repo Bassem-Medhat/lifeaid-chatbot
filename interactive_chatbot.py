@@ -6,6 +6,7 @@ from chatbot_engine import (
     _VAGUE_INPUTS, _expand_query,
     _BLUE_CYANOSIS_CONTEXT, _BLUE_BANDAGE_EXCLUSIONS,
     _apply_priority_boost, _detect_emergency_categories,
+    _build_doc_text,
 )
 
 
@@ -21,7 +22,8 @@ class InteractiveFirstAidChatbot:
 
         print("Creating knowledge base...")
         self.questions = [item['question'] for item in self.data]
-        self.question_embeddings = self.vectorizer.fit_transform(self.questions)
+        docs = [_build_doc_text(item) for item in self.data]
+        self.question_embeddings = self.vectorizer.fit_transform(docs)
 
         self.conversation_state = {
             'current_emergency': None,
