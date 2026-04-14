@@ -390,19 +390,48 @@ def _expand_query(user_question):
 def _build_doc_text(item):
     """Return the text used to represent a knowledge-base entry in TF-IDF space.
 
-    Combines the question with all keyword strings so that synonyms stored in
-    the keywords field actually influence similarity scores.  Keywords may be
-    stored as newline-separated terms inside a single array element.
+    Combines ALL text fields so that synonyms, symptom descriptions, and the
+    actual first-aid steps vocabulary all contribute to similarity scoring:
+      - question        (scenario title)
+      - keywords        (synonyms / symptom phrases; may contain newline-joined
+                         multi-term strings from the original dataset)
+      - answer          (first-aid steps text — stripped of markdown formatting
+                         so symbols like ** and ## don't pollute the vocabulary)
+
+    Note: the vectorizer must be initialised with max_features=8000 to prevent
+    the longer answer texts from diluting cosine-similarity scores (longer
+    documents raise the L2 norm and lower similarity).  The cap keeps only the
+    most informative terms, eliminating that length penalty.
     """
+    parts = []
+
+    # 1. Scenario title
     q = item.get('question', '')
+    if q:
+        parts.append(q)
+
+    # 2. Keywords / synonym list
     kw_list = item.get('keywords', [])
     if kw_list:
         kw_text = ' '.join(
             kw.replace('\n', ' ') for kw in kw_list if isinstance(kw, str)
         ).strip()
         if kw_text:
-            return q + ' ' + kw_text
-    return q
+            parts.append(kw_text)
+
+    # 3. First-aid steps / answer text (was previously omitted — this was the bug)
+    answer = item.get('answer', '')
+    if answer and isinstance(answer, str):
+        answer = answer.strip()
+        # Strip wrapping quotes occasionally present in the raw dataset
+        if answer.startswith('"') and answer.endswith('"'):
+            answer = answer[1:-1]
+        # Remove markdown formatting so ** __ ## etc. don't enter the vocabulary
+        answer = re.sub(r'\*\*|__|##|#', '', answer)
+        answer = re.sub(r'\s+', ' ', answer).strip()
+        parts.append(answer)
+
+    return ' '.join(parts)
 
 
 class FirstAidChatbot:
@@ -415,18 +444,32 @@ class FirstAidChatbot:
         # Load the processed data
         self.data = self.load_data(data_file)
 
-        # Initialize the TF-IDF vectorizer
+        # [DEBUG] Confirm how many scenarios loaded and what keywords look like
+        print(f"[DEBUG] Total scenarios loaded: {len(self.data)}")
+        print(f"[DEBUG] Sample keywords from first scenario: {self.data[0].get('keywords', []) if self.data else []}")
+
+        # Initialize the TF-IDF vectorizer.
+        # max_features=8000 keeps only the most informative vocabulary terms.
+        # This is required because answer texts are long; without the cap their
+        # large L2 norms suppress cosine-similarity scores for short user queries.
         print("Loading AI model - this may take a moment...")
-        self.vectorizer = TfidfVectorizer(ngram_range=(1, 2), analyzer='word', min_df=1)
+        self.vectorizer = TfidfVectorizer(
+            ngram_range=(1, 2), analyzer='word', min_df=1, max_features=8000
+        )
         print("AI model loaded successfully")
 
-        # Create TF-IDF matrix — each document is question + keywords so that
-        # synonyms stored in the keywords field contribute to similarity scoring.
+        # Create TF-IDF matrix — each document combines question + keywords + answer
+        # so that synonyms, symptom descriptions, AND first-aid step vocabulary all
+        # contribute to similarity scoring.
         print("Creating knowledge base...")
         self.questions = [item['question'] for item in self.data]
         self.answers = [item['answer'] for item in self.data]
         docs = [_build_doc_text(item) for item in self.data]
         self.question_embeddings = self.vectorizer.fit_transform(docs)
+
+        # [DEBUG] Confirm vectorizer was fitted on all scenarios
+        print(f"[DEBUG] TF-IDF matrix shape: {self.question_embeddings.shape} "
+              f"— fitted on all {len(self.data)} scenarios")
         print(f"Knowledge base ready with {len(self.questions)} first aid scenarios")
 
     def load_data(self, data_file):
@@ -639,6 +682,22 @@ if __name__ == "__main__":
             response = bot.get_response(question)
             print(f"Response: {response[:200]}...\n")
             print("-" * 80 + "\n")
+
+        # [DEBUG] Top-3 match verification for the spilled-boiling-water test case
+        print("=" * 80)
+        print("[DEBUG] Top-3 match test: 'I spilled boiling water on my hand'")
+        print("=" * 80)
+        _test_query = "I spilled boiling water on my hand"
+        _expanded = _expand_query(_test_query)
+        print(f"[DEBUG] Expanded query: {_expanded}")
+        _emb = bot.vectorizer.transform([_expanded])
+        _sims = cosine_similarity(_emb, bot.question_embeddings)[0]
+        _sims = _apply_priority_boost(_sims, _test_query, bot.vectorizer, bot.question_embeddings)
+        _top3 = np.argsort(_sims)[-3:][::-1]
+        for rank, idx in enumerate(_top3, 1):
+            print(f"  #{rank}  score={_sims[idx]:.4f}  Q: {bot.questions[idx]}")
+        print(f"\n[DEBUG] Final response: {bot.get_response(_test_query)[:120]}\n")
+        print("=" * 80 + "\n")
 
         # Start interactive mode
         print("\nStarting interactive chat mode...")

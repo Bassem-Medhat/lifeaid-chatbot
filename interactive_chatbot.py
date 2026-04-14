@@ -18,7 +18,9 @@ class InteractiveFirstAidChatbot:
         self.data = self.load_data(data_file)
 
         print("Loading AI model...")
-        self.vectorizer = TfidfVectorizer(ngram_range=(1, 2), analyzer='word', min_df=1)
+        self.vectorizer = TfidfVectorizer(
+            ngram_range=(1, 2), analyzer='word', min_df=1, max_features=8000
+        )
 
         print("Creating knowledge base...")
         self.questions = [item['question'] for item in self.data]
