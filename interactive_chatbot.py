@@ -1,4 +1,5 @@
 import json
+import re
 import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
@@ -146,65 +147,65 @@ class InteractiveFirstAidChatbot:
 
     def match_followup_response(self, user_answer, qa_item):
         """
-        Match user's answer to appropriate response option
+        Match user's answer to appropriate response option.
+        Strips 'Conversational Response:' artifact from any bot_response field.
+        Uses whole-word matching to avoid false positives.
         """
         user_lower = user_answer.lower().strip()
-
-        # Get response options
         responses = qa_item.get('responses', [])
 
-        # Helper function to extract bot response from dict or string
         def get_bot_response(response_item):
             if isinstance(response_item, dict):
-                return response_item.get('bot_response', str(response_item))
-            return str(response_item)
+                text = response_item.get('bot_response', str(response_item))
+            else:
+                text = str(response_item)
+            # Strip the "Conversational Response:" section — must never reach user
+            marker = 'Conversational Response:'
+            if marker in text:
+                text = text[:text.index(marker)]
+            # Strip trailing separator lines
+            text = re.sub(r'\s*={3,}\s*$', '', text).strip()
+            return text
 
-        # If responses is a LIST, match by checking user_answer in each item
+        def _has_word(word, text):
+            return bool(re.search(r'\b' + re.escape(word) + r'\b', text, re.IGNORECASE))
+
+        yes_words = ['yes', 'yeah', 'yep', 'sure', 'ok', 'correct', 'right', 'نعم', 'اه', 'ايوه']
+        no_words  = ['no', 'nope', 'not', 'none', 'لا', 'لأ']
+
         if isinstance(responses, list):
-            yes_words = ['yes', 'yeah', 'yep', 'sure', 'ok', 'correct', 'right', 'نعم', 'اه', 'ايوه']
-            no_words = ['no', 'nope', 'not', 'none', 'لا', 'لأ']
-
-            # Try to find matching response in the list
             for response_item in responses:
-                if isinstance(response_item, dict):
-                    # Check if user_answer field matches user's input
-                    stored_answer = response_item.get('user_answer', '').lower()
+                if not isinstance(response_item, dict):
+                    continue
+                stored_answer = response_item.get('user_answer', '').lower()
 
-                    # Check for yes/no matches
-                    if any(word in user_lower for word in yes_words):
-                        if any(word in stored_answer for word in yes_words + ['can', 'conscious', 'breathing']):
-                            return get_bot_response(response_item)
-                    elif any(word in user_lower for word in no_words):
-                        if any(word in stored_answer for word in no_words + ['can\'t', 'cannot', 'not', 'unconscious']):
-                            return get_bot_response(response_item)
-
-                    # Check for keyword matches
-                    if any(word in stored_answer for word in user_lower.split()):
+                if any(_has_word(w, user_lower) for w in yes_words):
+                    if any(_has_word(w, stored_answer) for w in yes_words + ['can', 'conscious', 'breathing']):
+                        return get_bot_response(response_item)
+                elif any(_has_word(w, user_lower) for w in no_words):
+                    if any(_has_word(w, stored_answer) for w in no_words + ["can't", 'cannot', 'not', 'unconscious']):
                         return get_bot_response(response_item)
 
-            # Default: return first response if no match
+                # Keyword fallback: whole-word match on any meaningful user word
+                user_words = re.findall(r'\b\w+\b', user_lower)
+                if any(_has_word(w, stored_answer) for w in user_words if len(w) > 2):
+                    return get_bot_response(response_item)
+
             if responses:
                 return get_bot_response(responses[0])
             return "Understood."
 
-        # If responses is a DICT
         else:
-            yes_words = ['yes', 'yeah', 'yep', 'sure', 'ok', 'correct', 'right', 'نعم', 'اه', 'ايوه']
-            no_words = ['no', 'nope', 'not', 'none', 'لا', 'لأ']
-
-            if any(word in user_lower for word in yes_words):
+            if any(_has_word(w, user_lower) for w in yes_words):
                 response = responses.get('yes', responses.get('if_yes', responses.get('default', 'Understood.')))
                 return get_bot_response(response)
-            elif any(word in user_lower for word in no_words):
+            elif any(_has_word(w, user_lower) for w in no_words):
                 response = responses.get('no', responses.get('if_no', responses.get('default', 'Understood.')))
                 return get_bot_response(response)
             else:
-                # Try to match the actual answer to response options
                 for key, response in responses.items():
                     if isinstance(key, str) and (key.lower() in user_lower or user_lower in key.lower()):
                         return get_bot_response(response)
-
-                # Default response if no match
                 default = responses.get('default', list(responses.values())[0] if responses else 'Understood.')
                 return get_bot_response(default)
     def _get_cyanosis_answer(self):

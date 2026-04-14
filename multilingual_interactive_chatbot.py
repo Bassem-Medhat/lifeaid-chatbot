@@ -304,19 +304,19 @@ class MultilingualInteractiveFirstAidChatbot:
         in_conversation = self.chatbot.conversation_state.get('waiting_for_followup', False)
 
         if in_conversation:
-            # Use whole-word matching so "show" doesn't match "how",
-            # "shoulder" doesn't match "should", etc.
-            # Emergency topic words are intentionally excluded: the user's
-            # answer to "Is the bleeding heavy?" naturally contains "bleeding",
-            # but that does NOT make it a new question.  The base chatbot
-            # (interactive_chatbot.py) already detects genuine new emergencies
-            # via embedding similarity, so we don't need to duplicate that here.
-            _new_q_words = {'what', 'how', 'when', 'where', 'why', 'should'}
-            _eng_word_set = set(re.findall(r'\b\w+\b', english_lower))
+            # Only treat as a new question if the message STARTS with a question
+            # word or contains a '?'.  Checking any word in the sentence was too
+            # aggressive — e.g. "I should keep pressure on it" triggered a reset
+            # because "should" was in the set.  A follow-up answer rarely starts
+            # with a question word, but a genuine new question almost always does.
+            _eng_words = re.findall(r'\b\w+\b', english_lower)
+            _question_starters = {
+                'what', 'how', 'when', 'where', 'why', 'should', 'can', 'could',
+                'would', 'will', 'is', 'are', 'do', 'does', 'did',
+            }
             is_new_question = (
                 '?' in english_input or
-                bool(_new_q_words & _eng_word_set) or
-                'do i' in english_lower
+                (bool(_eng_words) and _eng_words[0] in _question_starters)
             )
             if is_new_question:
                 print("Detected new question — resetting conversation state")
