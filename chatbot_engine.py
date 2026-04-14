@@ -42,6 +42,9 @@ _KEYWORD_EXPANSIONS = {
         'burn', 'burned', 'burning', 'burnt', 'scald', 'scalded',
         'hot water burn', 'fire burn', 'chemical burn', 'sunburn',
         'blister from heat',
+        'boiling water', 'boiling', 'hot water', 'hot liquid',
+        'spilled hot', 'spilled boiling', 'hot drink',
+        'coffee burn', 'tea burn', 'cooking burn',
     ],
     'broken bone fracture': [
         'fracture', 'fractured', 'broken bone', 'break bone', 'broke bone',
@@ -287,7 +290,7 @@ class FirstAidChatbot:
             print(f"Error loading data: {e}")
             return []
 
-    def find_best_match(self, user_question, threshold=0.25, clarification_threshold=0.40):
+    def find_best_match(self, user_question, threshold=0.25, clarification_threshold=0.30):
         """
         Find the best matching answer for user's question.
 

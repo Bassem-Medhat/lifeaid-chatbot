@@ -3019,7 +3019,19 @@
       "burns",
       "stop burning process",
       "thermal injury",
-      "first aid"
+      "first aid",
+      "boiling water",
+      "spilled",
+      "hot water",
+      "hot liquid",
+      "scalded",
+      "scald",
+      "spilled hot",
+      "boiling",
+      "hot drink",
+      "coffee burn",
+      "tea burn",
+      "cooking burn"
     ],
     "severity": "URGENT",
     "follow_up_qa": [
@@ -3084,7 +3096,19 @@
       "burns",
       "stop burning process",
       "thermal injury",
-      "first aid"
+      "first aid",
+      "boiling water",
+      "spilled",
+      "hot water",
+      "hot liquid",
+      "scalded",
+      "scald",
+      "spilled hot",
+      "boiling",
+      "hot drink",
+      "coffee burn",
+      "tea burn",
+      "cooking burn"
     ],
     "severity": "URGENT",
     "follow_up_qa": [
@@ -3149,7 +3173,19 @@
       "burns",
       "stop burning process",
       "thermal injury",
-      "first aid"
+      "first aid",
+      "boiling water",
+      "spilled",
+      "hot water",
+      "hot liquid",
+      "scalded",
+      "scald",
+      "spilled hot",
+      "boiling",
+      "hot drink",
+      "coffee burn",
+      "tea burn",
+      "cooking burn"
     ],
     "severity": "URGENT",
     "follow_up_qa": [
@@ -3214,7 +3250,19 @@
       "burns",
       "stop burning process",
       "thermal injury",
-      "first aid"
+      "first aid",
+      "boiling water",
+      "spilled",
+      "hot water",
+      "hot liquid",
+      "scalded",
+      "scald",
+      "spilled hot",
+      "boiling",
+      "hot drink",
+      "coffee burn",
+      "tea burn",
+      "cooking burn"
     ],
     "severity": "URGENT",
     "follow_up_qa": [
@@ -3279,7 +3327,19 @@
       "burns",
       "stop burning process",
       "thermal injury",
-      "first aid"
+      "first aid",
+      "boiling water",
+      "spilled",
+      "hot water",
+      "hot liquid",
+      "scalded",
+      "scald",
+      "spilled hot",
+      "boiling",
+      "hot drink",
+      "coffee burn",
+      "tea burn",
+      "cooking burn"
     ],
     "severity": "URGENT",
     "follow_up_qa": [
@@ -3344,7 +3404,19 @@
       "burns",
       "stop burning process",
       "thermal injury",
-      "first aid"
+      "first aid",
+      "boiling water",
+      "spilled",
+      "hot water",
+      "hot liquid",
+      "scalded",
+      "scald",
+      "spilled hot",
+      "boiling",
+      "hot drink",
+      "coffee burn",
+      "tea burn",
+      "cooking burn"
     ],
     "severity": "URGENT",
     "follow_up_qa": [
@@ -35621,7 +35693,16 @@
       "Thermal burn",
       "Cooling",
       "Aloe vera",
-      "Non-stick bandage"
+      "Non-stick bandage",
+      "scalded",
+      "scald",
+      "boiling water",
+      "hot water",
+      "hot liquid",
+      "spilled hot",
+      "boiling",
+      "hot drink",
+      "cooking burn"
     ],
     "severity": "MODERATE",
     "follow_up_qa": [
@@ -35661,7 +35742,16 @@
       "Thermal burn",
       "Cooling",
       "Aloe vera",
-      "Non-stick bandage"
+      "Non-stick bandage",
+      "scalded",
+      "scald",
+      "boiling water",
+      "hot water",
+      "hot liquid",
+      "spilled hot",
+      "boiling",
+      "hot drink",
+      "cooking burn"
     ],
     "severity": "MODERATE",
     "follow_up_qa": [
@@ -35701,7 +35791,16 @@
       "Thermal burn",
       "Cooling",
       "Aloe vera",
-      "Non-stick bandage"
+      "Non-stick bandage",
+      "scalded",
+      "scald",
+      "boiling water",
+      "hot water",
+      "hot liquid",
+      "spilled hot",
+      "boiling",
+      "hot drink",
+      "cooking burn"
     ],
     "severity": "MODERATE",
     "follow_up_qa": [
@@ -35741,7 +35840,16 @@
       "Thermal burn",
       "Cooling",
       "Aloe vera",
-      "Non-stick bandage"
+      "Non-stick bandage",
+      "scalded",
+      "scald",
+      "boiling water",
+      "hot water",
+      "hot liquid",
+      "spilled hot",
+      "boiling",
+      "hot drink",
+      "cooking burn"
     ],
     "severity": "MODERATE",
     "follow_up_qa": [
@@ -35781,7 +35889,16 @@
       "Thermal burn",
       "Cooling",
       "Aloe vera",
-      "Non-stick bandage"
+      "Non-stick bandage",
+      "scalded",
+      "scald",
+      "boiling water",
+      "hot water",
+      "hot liquid",
+      "spilled hot",
+      "boiling",
+      "hot drink",
+      "cooking burn"
     ],
     "severity": "MODERATE",
     "follow_up_qa": [
@@ -35821,7 +35938,16 @@
       "Thermal burn",
       "Cooling",
       "Aloe vera",
-      "Non-stick bandage"
+      "Non-stick bandage",
+      "scalded",
+      "scald",
+      "boiling water",
+      "hot water",
+      "hot liquid",
+      "spilled hot",
+      "boiling",
+      "hot drink",
+      "cooking burn"
     ],
     "severity": "MODERATE",
     "follow_up_qa": [
