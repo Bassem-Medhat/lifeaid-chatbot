@@ -80,6 +80,9 @@ _KEYWORD_EXPANSIONS = {
         'jaw pain', 'left arm pain', 'pain down arm',
         'pressure in chest', 'tightness in chest', 'squeezing in chest',
         'pain radiating', 'radiating to arm',
+        # CPR / unresponsive natural phrases
+        'not breathing at all', 'has no pulse', 'collapsed not responding',
+        'lifeless on floor',
     ],
     'choking airway blocked cyanosis': [
         'choke', 'choking', 'cant breathe', "can't breathe", 'cannot breathe',
@@ -97,6 +100,9 @@ _KEYWORD_EXPANSIONS = {
         'difficulty breathing', 'trouble breathing', 'hard to breathe',
         'struggling to breathe', 'labored breathing',
         'gagging', 'keeps gagging',
+        # Natural conversational phrases
+        'something stuck in', 'stuck in throat', 'blocked airway',
+        'turning blue face',
     ],
     'severe bleeding wound': [
         'bleed', 'bleeding', 'blood', 'hemorrhage', 'hemorrhaging',
@@ -104,6 +110,9 @@ _KEYWORD_EXPANSIONS = {
         'blood loss', 'blood everywhere', 'deep cut',
         'gushing blood', 'wont stop bleeding', "won't stop bleeding",
         'bleeding heavily', 'blood pouring', 'spurting blood',
+        # Natural conversational phrases
+        'bleeding badly', 'cut my', 'deep cut on',
+        'knife cut', 'glass cut', 'bleeding from my',
     ],
     'burn injury scald': [
         'burn', 'burned', 'burning', 'burnt', 'scald', 'scalded',
@@ -117,6 +126,9 @@ _KEYWORD_EXPANSIONS = {
         # Symptom-first descriptions
         'blistering', 'blistered', 'skin blistering', 'skin burned',
         'red and burning', 'burning skin', 'skin on fire',
+        # Natural conversational phrases
+        'hot water on', 'boiling water on', 'burned my', 'burn on my',
+        'hot liquid on', 'scalded my', 'stove burned', 'iron burned',
     ],
     'broken bone fracture': [
         'fracture', 'fractured', 'broken bone', 'break bone', 'broke bone',
@@ -158,6 +170,8 @@ _KEYWORD_EXPANSIONS = {
         'limp', 'went limp', 'body limp', 'gone limp',
         'not moving', 'stopped moving',
         'not responding to', 'not reacting',
+        # Natural conversational phrases
+        'fell and wont', 'not responding to me', 'eyes rolled back',
     ],
     'seizure convulsion': [
         'seizure', 'convulsion', 'convulsing', 'fitting', 'fits',
