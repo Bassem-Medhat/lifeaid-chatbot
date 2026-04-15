@@ -76,7 +76,7 @@ class InteractiveFirstAidChatbot:
         best_match_idx = np.argmax(similarities)
         best_score = similarities[best_match_idx]
 
-        print(f"Debug - Best match score: {best_score:.3f}")
+        print(f"[InteractiveChatbot] query={user_question!r:.60}  score={best_score:.4f}  threshold={threshold}  matched={self.questions[best_match_idx]!r:.60}")
 
         if best_score < threshold:
             return None, 0

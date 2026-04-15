@@ -1768,6 +1768,30 @@ def show_chat_page():
                                             instructions='Continue attempts until object dislodges')
     
                 if timer_needed:
+                    # If the chatbot returned a low-confidence message but the
+                    # timer fired, a match WAS found — replace the vague reply
+                    # with the actual first-aid answer before appending the timer.
+                    _LOW_CONF_MARKERS = [
+                        "I found something related, but I'm not confident",
+                        "I'm not entirely sure what situation you're describing",
+                        "I'm sorry, I couldn't find a good match",
+                    ]
+                    if any(marker in bot_response for marker in _LOW_CONF_MARKERS):
+                        _underlying = getattr(st.session_state.chatbot, 'chatbot', None)
+                        if _underlying is not None:
+                            _em, _conf = _underlying.find_best_match(
+                                user_input, threshold=0.0
+                            )
+                            if _em is not None:
+                                bot_response = _underlying.format_answer_smart(
+                                    _em, user_input, _conf
+                                )
+                                print(
+                                    f"[Timer override] score={_conf:.4f} — replaced "
+                                    f"low-confidence response with full answer for: "
+                                    f"{user_input!r}"
+                                )
+
                     st.session_state.active_timer = timer_needed
                     st.session_state.timer_start_time = datetime.datetime.now()
                     st.session_state.timer_paused = True
