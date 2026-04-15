@@ -11,6 +11,17 @@ try:
 except ImportError:
     _RAPIDFUZZ_AVAILABLE = False
 
+# Lemmatization for root-form matching (optional — falls back gracefully if missing)
+try:
+    import nltk
+    from nltk.stem import WordNetLemmatizer
+    nltk.download('wordnet', quiet=True)
+    nltk.download('omw-1.4', quiet=True)
+    _lemmatizer = WordNetLemmatizer()
+    _LEMMATIZE_AVAILABLE = True
+except (ImportError, Exception):
+    _LEMMATIZE_AVAILABLE = False
+
 _FUZZY_THRESHOLD = 80  # minimum similarity % to accept a fuzzy keyword match
 
 # Single- or double-word inputs too vague to meaningfully search.
@@ -404,6 +415,30 @@ def _correct_spelling(text):
     return ''.join(out)
 
 
+def _lemmatize_text(text):
+    """Reduce each word to its root form using verb-form lemmatization.
+
+    Converts inflected forms so that TF-IDF matching works on shared root
+    vocabulary across both user queries and knowledge-base documents:
+      "spilled" → "spill",  "burning"/"burned" → "burn",
+      "bleeding"/"bled"    → "bleed",  "choking"/"choked" → "choke"
+
+    Applied to BOTH user queries (in find_best_match) and KB documents
+    (in _build_doc_text) so they are encoded on identical root forms.
+    Falls back to returning the original text when NLTK is unavailable.
+    """
+    if not _LEMMATIZE_AVAILABLE:
+        return text
+    tokens = re.findall(r"[A-Za-z]+|[^A-Za-z]+", text)
+    out = []
+    for token in tokens:
+        if token.isalpha():
+            out.append(_lemmatizer.lemmatize(token.lower(), pos='v'))
+        else:
+            out.append(token)
+    return ''.join(out)
+
+
 def _expand_query(user_question):
     """Append canonical emergency terms when trigger keywords are detected.
 
@@ -526,7 +561,7 @@ def _build_doc_text(item):
         answer = re.sub(r'\s+', ' ', answer).strip()
         parts.append(answer)
 
-    return ' '.join(parts)
+    return _lemmatize_text(' '.join(parts))
 
 
 class FirstAidChatbot:
@@ -580,14 +615,14 @@ class FirstAidChatbot:
             print(f"Error loading data: {e}")
             return []
 
-    def find_best_match(self, user_question, threshold=0.25, clarification_threshold=0.30):
+    def find_best_match(self, user_question, threshold=0.15, clarification_threshold=0.22):
         """
         Find the best matching answer for user's question.
 
         Scores are divided into three zones:
-          < threshold              → no useful match found
-          threshold – clarification_threshold → low confidence; ask for more detail
-          >= clarification_threshold           → good match; return the answer
+          < threshold              → no useful match found       (0.15)
+          threshold – clarification_threshold → low confidence   (0.15–0.22)
+          >= clarification_threshold           → good match       (0.22+)
 
         Args:
             user_question: The question asked by the user
@@ -599,7 +634,8 @@ class FirstAidChatbot:
         """
         # --- Path A: full query (original behaviour) -------------------------
         expanded_full = _expand_query(user_question)
-        emb_full = self.vectorizer.transform([expanded_full])
+        lemmatized_full = _lemmatize_text(expanded_full)
+        emb_full = self.vectorizer.transform([lemmatized_full])
         sims_full = cosine_similarity(emb_full, self.question_embeddings)[0]
 
         # --- Path B: core query (filler stripped, then expanded) -------------
@@ -608,7 +644,8 @@ class FirstAidChatbot:
         # language like "I spilled boiling water on my hand".
         core_text = _extract_core_query(user_question)
         expanded_core = _expand_query(core_text)
-        emb_core = self.vectorizer.transform([expanded_core])
+        lemmatized_core = _lemmatize_text(expanded_core)
+        emb_core = self.vectorizer.transform([lemmatized_core])
         sims_core = cosine_similarity(emb_core, self.question_embeddings)[0]
 
         # Element-wise max: whichever representation scored higher wins
@@ -788,21 +825,30 @@ if __name__ == "__main__":
             print(f"Response: {response[:200]}...\n")
             print("-" * 80 + "\n")
 
-        # [DEBUG] Top-3 match verification for the spilled-boiling-water test case
+        # ── Targeted regression tests for natural-language matching ──────────
         print("=" * 80)
-        print("[DEBUG] Top-3 match test: 'I spilled boiling water on my hand'")
+        print("[TEST] Natural-language matching scores")
         print("=" * 80)
-        _test_query = "I spilled boiling water on my hand"
-        _expanded = _expand_query(_test_query)
-        print(f"[DEBUG] Expanded query: {_expanded}")
-        _emb = bot.vectorizer.transform([_expanded])
-        _sims = cosine_similarity(_emb, bot.question_embeddings)[0]
-        _sims = _apply_priority_boost(_sims, _test_query, bot.vectorizer, bot.question_embeddings)
-        _top3 = np.argsort(_sims)[-3:][::-1]
-        for rank, idx in enumerate(_top3, 1):
-            print(f"  #{rank}  score={_sims[idx]:.4f}  Q: {bot.questions[idx]}")
-        print(f"\n[DEBUG] Final response: {bot.get_response(_test_query)[:120]}\n")
-        print("=" * 80 + "\n")
+        _natural_tests = [
+            "I spilled boiling water on my hand",
+            "my hand got burned",
+            "there is blood everywhere",
+            "he wont wake up",
+        ]
+        for _test_query in _natural_tests:
+            _expanded = _expand_query(_test_query)
+            _lemmatized = _lemmatize_text(_expanded)
+            _emb = bot.vectorizer.transform([_lemmatized])
+            _sims = cosine_similarity(_emb, bot.question_embeddings)[0]
+            _sims = _apply_priority_boost(_sims, _test_query, bot.vectorizer, bot.question_embeddings)
+            _best_idx = int(np.argmax(_sims))
+            _best_score = _sims[_best_idx]
+            print(f"\n  Input : {_test_query!r}")
+            print(f"  Score : {_best_score:.4f}  |  Matched Q: {bot.questions[_best_idx]}")
+            _response = bot.get_response(_test_query)
+            _label = "FOUND" if _best_score >= 0.22 else ("LOW-CONF" if _best_score >= 0.15 else "NO MATCH")
+            print(f"  Result: [{_label}]  Response preview: {_response[:80]}...")
+        print("\n" + "=" * 80 + "\n")
 
         # Start interactive mode
         print("\nStarting interactive chat mode...")
