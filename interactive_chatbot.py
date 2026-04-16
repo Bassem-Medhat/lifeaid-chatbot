@@ -237,8 +237,28 @@ class InteractiveFirstAidChatbot:
         smarter follow-up detector can inspect whether the last bot message was a
         question.
         """
+        print("\n" + "="*60)
+        print(f"[DEBUG] USER INPUT: {user_input!r}")
+        print(f"[DEBUG] STATE BEFORE:")
+        print(f"  waiting_for_followup : {self.conversation_state['waiting_for_followup']}")
+        print(f"  current_followup_idx : {self.conversation_state['current_followup_index']}")
+        current_emerg = self.conversation_state.get('current_emergency')
+        print(f"  current_emergency    : {current_emerg.get('question','?')!r:.80}" if current_emerg else "  current_emergency    : None")
+        print(f"  last_matched_emerg   : {self.last_matched_emergency.get('question','?')!r:.80}" if self.last_matched_emergency else "  last_matched_emerg   : None")
+        print(f"  last_bot_message ends: {self.conversation_state.get('last_bot_message','')[-80:]!r}")
+        print("="*60)
+
         response = self._get_response(user_input)
         self.conversation_state['last_bot_message'] = response
+
+        print(f"[DEBUG] STATE AFTER:")
+        print(f"  waiting_for_followup : {self.conversation_state['waiting_for_followup']}")
+        print(f"  current_followup_idx : {self.conversation_state['current_followup_index']}")
+        after_emerg = self.conversation_state.get('current_emergency')
+        print(f"  current_emergency    : {after_emerg.get('question','?')!r:.80}" if after_emerg else "  current_emergency    : None")
+        print(f"[DEBUG] RESPONSE (first 200 chars): {response[:200]!r}")
+        print("="*60 + "\n")
+
         return response
 
     def _get_response(self, user_input):
@@ -379,17 +399,33 @@ class InteractiveFirstAidChatbot:
                     next_qa = follow_up_qa[self.conversation_state['current_followup_index']]
                     return f"{response_given}\n\nNow, {next_qa['question']}"
                 else:
-                    # No more follow-ups - ask if they want detailed steps
+                    # No more follow-ups - ask if they want detailed steps.
+                    # Reset both flags together so no zombie state is left behind.
                     self.conversation_state['waiting_for_followup'] = False
+                    self.conversation_state['current_emergency'] = None
+                    self.conversation_state['current_followup_index'] = 0
                     return f"{response_given}\n\nWould you like more detailed step-by-step instructions?"
 
-        # Check if asking for more details after follow-ups completed
-        if self.conversation_state['current_emergency'] and not self.conversation_state['waiting_for_followup']:
-            yes_words = ['yes', 'yeah', 'yep', 'sure', 'please', 'ok', 'okay']
-            no_words = ['no', 'nope', 'not really', 'im good', 'i\'m good']
+        # Check if this is a completely new question (not a follow-up answer).
+        # Runs BEFORE the yes-word trap so new questions are never hijacked.
+        if '?' in user_input and len(user_input.split()) > 3:
+            # Looks like a new question, not a follow-up answer
+            if self.conversation_state['current_emergency']:
+                # Reset state for new question
+                self.conversation_state['current_emergency'] = None
+                self.conversation_state['waiting_for_followup'] = False
+                self.conversation_state['current_followup_index'] = 0
 
+        # Check if asking for more details after follow-ups completed.
+        # Only fires when the ENTIRE message is a bare yes/no word so that
+        # messages like "yes but what about burns?" fall through to normal routing.
+        if self.conversation_state['current_emergency'] and not self.conversation_state['waiting_for_followup']:
+            yes_words = {'yes', 'yeah', 'yep', 'sure', 'please', 'ok', 'okay'}
+            no_words  = {'no', 'nope', 'not really', 'im good', "i'm good"}
+
+            _bare = user_lower.strip().rstrip('.!?')
             # Check if they're asking for more details/steps
-            if any(word in user_lower for word in yes_words):
+            if _bare in yes_words:
                 emergency = self.conversation_state['current_emergency']
                 # Reset all state
                 self.conversation_state['current_emergency'] = None
@@ -405,22 +441,12 @@ class InteractiveFirstAidChatbot:
 
                 return "Here are the detailed steps:\n\n" + answer
 
-            elif any(word in user_lower for word in no_words):
+            elif _bare in no_words:
                 # Reset all state
                 self.conversation_state['current_emergency'] = None
                 self.conversation_state['waiting_for_followup'] = False
                 self.conversation_state['current_followup_index'] = 0
                 return "Alright. If you need anything else, just ask. Stay safe!"
-
-        # Check if this is a completely new question (not a follow-up answer)
-        # If they're asking a new question with a ?, reset state
-        if '?' in user_input and len(user_input.split()) > 3:
-            # Looks like a new question, not a follow-up answer
-            if self.conversation_state['current_emergency']:
-                # Reset state for new question
-                self.conversation_state['current_emergency'] = None
-                self.conversation_state['waiting_for_followup'] = False
-                self.conversation_state['current_followup_index'] = 0
 
         # New query - find matching emergency
         emergency_data, confidence = self.find_best_match(user_input)

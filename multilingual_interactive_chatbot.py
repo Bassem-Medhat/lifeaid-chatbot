@@ -301,7 +301,14 @@ class MultilingualInteractiveFirstAidChatbot:
         # ── Step 3: New question vs follow-up detection (English only) ────
         # Now that the input is in English, no multilingual keyword lists
         # are needed — the same checks work for every input language.
-        in_conversation = self.chatbot.conversation_state.get('waiting_for_followup', False)
+        #
+        # Guard BOTH active follow-up state AND the zombie state where
+        # waiting_for_followup is False but current_emergency is still set.
+        # Without the zombie-state check, new questions asked after the
+        # follow-up chain completes bypass this block entirely.
+        _waiting   = self.chatbot.conversation_state.get('waiting_for_followup', False)
+        _has_emerg = self.chatbot.conversation_state.get('current_emergency') is not None
+        in_conversation = _waiting or _has_emerg
 
         if in_conversation:
             # Only treat as a new question if the message STARTS with a question
@@ -318,12 +325,24 @@ class MultilingualInteractiveFirstAidChatbot:
                 '?' in english_input or
                 (bool(_eng_words) and _eng_words[0] in _question_starters)
             )
+
+            # Also treat it as a new question if it mentions an emergency category
+            # that is different from the current matched emergency.
+            if not is_new_question and _has_emerg:
+                from chatbot_engine import _detect_emergency_categories
+                user_cats    = _detect_emergency_categories(english_input)
+                current_q    = self.chatbot.conversation_state['current_emergency'].get('question', '')
+                current_cats = _detect_emergency_categories(current_q)
+                if user_cats and current_cats and not (user_cats & current_cats):
+                    is_new_question = True
+
             if is_new_question:
                 print("Detected new question — resetting conversation state")
                 self.chatbot.conversation_state = {
                     'current_emergency': None,
                     'current_followup_index': 0,
                     'waiting_for_followup': False,
+                    'last_bot_message': '',
                 }
                 self._asked_followup_questions = set()
                 in_conversation = False
