@@ -413,21 +413,11 @@ class InteractiveFirstAidChatbot:
                     self.conversation_state['current_followup_index'] = 0
                     return f"{response_given}\n\nWould you like more detailed step-by-step instructions?"
 
-        # ── Matching first ────────────────────────────────────────────────────
-        # TF-IDF matching runs before any conversation-state checks so that new
-        # emergency questions are never silently intercepted by stale state.
-        emergency_data, confidence = self.find_best_match(user_input)
-
-        # A high-confidence match for a new question clears the pending-details
-        # state so the answer is never blocked.  A bare-word answer like "yes"
-        # will score near 0 and will not trigger this clear.
-        if emergency_data is not None and confidence >= 0.40:
-            self.conversation_state['_details_emergency'] = None
-
-        # ── "More details" prompt handling ────────────────────────────────────
-        # Bug 3 fix: only intercepts when the ENTIRE message is a bare yes/no
-        # word.  Longer messages (e.g. "yes but what about burns?") fall through
-        # to the TF-IDF result above so they are routed as new questions.
+        # Check if asking for more details after follow-ups completed.
+        # Bug 3 fix: only fires when the ENTIRE message is a bare yes/no word
+        # so messages like "yes but what about burns?" fall through to matching.
+        # Uses _details_emergency (Bug 1 fix) so current_emergency is never
+        # left set when waiting_for_followup is False.
         if self.conversation_state.get('_details_emergency') and not self.conversation_state['waiting_for_followup']:
             yes_words = {'yes', 'yeah', 'yep', 'sure', 'please', 'ok', 'okay'}
             no_words  = {'no', 'nope', 'not really', 'im good', "i'm good"}
@@ -445,11 +435,16 @@ class InteractiveFirstAidChatbot:
                 self.conversation_state['_details_emergency'] = None
                 return "Alright. If you need anything else, just ask. Stay safe!"
 
-            # Not a bare yes/no — clear pending state and fall through to
-            # the TF-IDF result so the message is treated as a new question.
-            self.conversation_state['_details_emergency'] = None
+        # Clear pending-details state for any new question that contains '?'
+        # so it is never intercepted on a subsequent bare-yes answer.
+        if '?' in user_input and len(user_input.split()) > 3:
+            if self.conversation_state.get('_details_emergency'):
+                self.conversation_state['_details_emergency'] = None
 
-        # ── Return based on TF-IDF result ─────────────────────────────────────
+        # New query — TF-IDF matching runs here for every message that was not
+        # handled as a follow-up answer or a bare yes/no above.
+        emergency_data, confidence = self.find_best_match(user_input)
+
         if emergency_data is None:
             return "I'm not sure about that. Could you rephrase? Try asking about bleeding, choking, burns, CPR, fractures, or other common emergencies."
 
@@ -461,7 +456,8 @@ class InteractiveFirstAidChatbot:
                 "'burn from hot water', 'person collapsed and unresponsive'."
             )
 
-        return self.format_answer_smart(emergency_data, user_input, confidence)
+        response = self.format_answer_smart(emergency_data, user_input, confidence)
+        return response
 
     def chat(self):
 
