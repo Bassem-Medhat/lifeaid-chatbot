@@ -33,6 +33,7 @@ class InteractiveFirstAidChatbot:
             'current_followup_index': 0,
             'waiting_for_followup': False,
             'last_bot_message': '',
+            '_details_emergency': None,  # holds emergency for pending "more details?" prompt
         }
 
         self.last_matched_emergency = None
@@ -285,6 +286,7 @@ class InteractiveFirstAidChatbot:
                 'current_followup_index': 0,
                 'waiting_for_followup': False,
                 'last_bot_message': '',
+                '_details_emergency': None,
             }
             override_data = self._get_cyanosis_answer()
             if override_data:
@@ -313,6 +315,7 @@ class InteractiveFirstAidChatbot:
             self.conversation_state['current_emergency'] = None
             self.conversation_state['waiting_for_followup'] = False
             self.conversation_state['current_followup_index'] = 0
+            self.conversation_state['_details_emergency'] = None
             return "You're welcome! Stay safe. If you need any more help, I'm here."
 
         # Only treat as goodbye if clearly leaving
@@ -320,6 +323,7 @@ class InteractiveFirstAidChatbot:
             self.conversation_state['current_emergency'] = None
             self.conversation_state['waiting_for_followup'] = False
             self.conversation_state['current_followup_index'] = 0
+            self.conversation_state['_details_emergency'] = None
             return "Stay safe! Take care."
 
         # ── Smarter follow-up detection ──────────────────────────────────────
@@ -400,61 +404,55 @@ class InteractiveFirstAidChatbot:
                     return f"{response_given}\n\nNow, {next_qa['question']}"
                 else:
                     # No more follow-ups - ask if they want detailed steps.
-                    # Reset both flags together so no zombie state is left behind.
-                    self.conversation_state['waiting_for_followup'] = False
+                    # Bug 1 fix: reset current_emergency and waiting_for_followup together
+                    # so there is never a zombie current_emergency.  The emergency is
+                    # saved to _details_emergency so the "more details?" prompt still works.
+                    self.conversation_state['_details_emergency'] = self.conversation_state['current_emergency']
                     self.conversation_state['current_emergency'] = None
+                    self.conversation_state['waiting_for_followup'] = False
                     self.conversation_state['current_followup_index'] = 0
                     return f"{response_given}\n\nWould you like more detailed step-by-step instructions?"
 
-        # Check if this is a completely new question (not a follow-up answer).
-        # Runs BEFORE the yes-word trap so new questions are never hijacked.
-        if '?' in user_input and len(user_input.split()) > 3:
-            # Looks like a new question, not a follow-up answer
-            if self.conversation_state['current_emergency']:
-                # Reset state for new question
-                self.conversation_state['current_emergency'] = None
-                self.conversation_state['waiting_for_followup'] = False
-                self.conversation_state['current_followup_index'] = 0
+        # ── Matching first ────────────────────────────────────────────────────
+        # TF-IDF matching runs before any conversation-state checks so that new
+        # emergency questions are never silently intercepted by stale state.
+        emergency_data, confidence = self.find_best_match(user_input)
 
-        # Check if asking for more details after follow-ups completed.
-        # Only fires when the ENTIRE message is a bare yes/no word so that
-        # messages like "yes but what about burns?" fall through to normal routing.
-        if self.conversation_state['current_emergency'] and not self.conversation_state['waiting_for_followup']:
+        # A high-confidence match for a new question clears the pending-details
+        # state so the answer is never blocked.  A bare-word answer like "yes"
+        # will score near 0 and will not trigger this clear.
+        if emergency_data is not None and confidence >= 0.40:
+            self.conversation_state['_details_emergency'] = None
+
+        # ── "More details" prompt handling ────────────────────────────────────
+        # Bug 3 fix: only intercepts when the ENTIRE message is a bare yes/no
+        # word.  Longer messages (e.g. "yes but what about burns?") fall through
+        # to the TF-IDF result above so they are routed as new questions.
+        if self.conversation_state.get('_details_emergency') and not self.conversation_state['waiting_for_followup']:
             yes_words = {'yes', 'yeah', 'yep', 'sure', 'please', 'ok', 'okay'}
             no_words  = {'no', 'nope', 'not really', 'im good', "i'm good"}
 
             _bare = user_lower.strip().rstrip('.!?')
-            # Check if they're asking for more details/steps
             if _bare in yes_words:
-                emergency = self.conversation_state['current_emergency']
-                # Reset all state
-                self.conversation_state['current_emergency'] = None
-                self.conversation_state['waiting_for_followup'] = False
-                self.conversation_state['current_followup_index'] = 0
-
-                # Return just the clean answer without emergency headers
-                answer = emergency.get('answer', '')
-
-                # Remove any emergency headers from the answer
+                pending = self.conversation_state['_details_emergency']
+                self.conversation_state['_details_emergency'] = None
+                answer = pending.get('answer', '')
                 answer = answer.replace('CRITICAL EMERGENCY - IMMEDIATE ACTION NEEDED\n\n', '')
                 answer = answer.replace('URGENT - Act Quickly\n\n', '')
-
                 return "Here are the detailed steps:\n\n" + answer
 
             elif _bare in no_words:
-                # Reset all state
-                self.conversation_state['current_emergency'] = None
-                self.conversation_state['waiting_for_followup'] = False
-                self.conversation_state['current_followup_index'] = 0
+                self.conversation_state['_details_emergency'] = None
                 return "Alright. If you need anything else, just ask. Stay safe!"
 
-        # New query - find matching emergency
-        emergency_data, confidence = self.find_best_match(user_input)
+            # Not a bare yes/no — clear pending state and fall through to
+            # the TF-IDF result so the message is treated as a new question.
+            self.conversation_state['_details_emergency'] = None
 
+        # ── Return based on TF-IDF result ─────────────────────────────────────
         if emergency_data is None:
             return "I'm not sure about that. Could you rephrase? Try asking about bleeding, choking, burns, CPR, fractures, or other common emergencies."
 
-        # Low confidence — found something but not certain enough to give an answer
         if confidence < 0.40:
             return (
                 "I found something related, but I'm not confident it matches your situation. "
@@ -463,10 +461,7 @@ class InteractiveFirstAidChatbot:
                 "'burn from hot water', 'person collapsed and unresponsive'."
             )
 
-        # Format and return answer
-        response = self.format_answer_smart(emergency_data, user_input, confidence)
-
-        return response
+        return self.format_answer_smart(emergency_data, user_input, confidence)
 
     def chat(self):
 
