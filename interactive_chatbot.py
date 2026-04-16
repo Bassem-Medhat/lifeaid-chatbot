@@ -33,7 +33,6 @@ class InteractiveFirstAidChatbot:
             'current_followup_index': 0,
             'waiting_for_followup': False,
             'last_bot_message': '',
-            '_details_emergency': None,  # holds emergency for pending "more details?" prompt
         }
 
         self.last_matched_emergency = None
@@ -286,7 +285,6 @@ class InteractiveFirstAidChatbot:
                 'current_followup_index': 0,
                 'waiting_for_followup': False,
                 'last_bot_message': '',
-                '_details_emergency': None,
             }
             override_data = self._get_cyanosis_answer()
             if override_data:
@@ -315,7 +313,6 @@ class InteractiveFirstAidChatbot:
             self.conversation_state['current_emergency'] = None
             self.conversation_state['waiting_for_followup'] = False
             self.conversation_state['current_followup_index'] = 0
-            self.conversation_state['_details_emergency'] = None
             return "You're welcome! Stay safe. If you need any more help, I'm here."
 
         # Only treat as goodbye if clearly leaving
@@ -323,7 +320,6 @@ class InteractiveFirstAidChatbot:
             self.conversation_state['current_emergency'] = None
             self.conversation_state['waiting_for_followup'] = False
             self.conversation_state['current_followup_index'] = 0
-            self.conversation_state['_details_emergency'] = None
             return "Stay safe! Take care."
 
         # ── Smarter follow-up detection ──────────────────────────────────────
@@ -403,14 +399,8 @@ class InteractiveFirstAidChatbot:
                     next_qa = follow_up_qa[self.conversation_state['current_followup_index']]
                     return f"{response_given}\n\nNow, {next_qa['question']}"
                 else:
-                    # No more follow-ups - ask if they want detailed steps.
-                    # Bug 1 fix: reset current_emergency and waiting_for_followup together
-                    # so there is never a zombie current_emergency.  The emergency is
-                    # saved to _details_emergency so the "more details?" prompt still works.
-                    self.conversation_state['_details_emergency'] = self.conversation_state['current_emergency']
-                    self.conversation_state['current_emergency'] = None
+                    # No more follow-ups - ask if they want detailed steps
                     self.conversation_state['waiting_for_followup'] = False
-                    self.conversation_state['current_followup_index'] = 0
                     return f"{response_given}\n\nWould you like more detailed step-by-step instructions?"
 
         # Check if asking for more details after follow-ups completed.

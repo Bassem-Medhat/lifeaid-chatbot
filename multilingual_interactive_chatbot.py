@@ -259,9 +259,7 @@ class MultilingualInteractiveFirstAidChatbot:
         self.chatbot.conversation_state = {
             'current_emergency': None,
             'current_followup_index': 0,
-            'waiting_for_followup': False,
-            'last_bot_message': '',
-            '_details_emergency': None,
+            'waiting_for_followup': False
         }
 
     def get_response(self, user_input):
@@ -303,15 +301,7 @@ class MultilingualInteractiveFirstAidChatbot:
         # ── Step 3: New question vs follow-up detection (English only) ────
         # Now that the input is in English, no multilingual keyword lists
         # are needed — the same checks work for every input language.
-        #
-        # Bug 2 fix: guard BOTH active follow-up state (_waiting) AND the
-        # pending-details state (_has_details) where waiting_for_followup is
-        # False but _details_emergency is still set.  Without the second check,
-        # new questions asked after the follow-up chain completes bypass this
-        # block entirely.
-        _waiting     = self.chatbot.conversation_state.get('waiting_for_followup', False)
-        _has_details = self.chatbot.conversation_state.get('_details_emergency') is not None
-        in_conversation = _waiting or _has_details
+        in_conversation = self.chatbot.conversation_state.get('waiting_for_followup', False)
 
         if in_conversation:
             # Only treat as a new question if the message STARTS with a question
@@ -328,29 +318,12 @@ class MultilingualInteractiveFirstAidChatbot:
                 '?' in english_input or
                 (bool(_eng_words) and _eng_words[0] in _question_starters)
             )
-
-            # Also treat as a new question if the message mentions an emergency
-            # category different from the one currently tracked.
-            if not is_new_question:
-                _ref_entry = (
-                    self.chatbot.conversation_state.get('current_emergency') or
-                    self.chatbot.conversation_state.get('_details_emergency')
-                )
-                if _ref_entry:
-                    from chatbot_engine import _detect_emergency_categories
-                    user_cats    = _detect_emergency_categories(english_input)
-                    current_cats = _detect_emergency_categories(_ref_entry.get('question', ''))
-                    if user_cats and current_cats and not (user_cats & current_cats):
-                        is_new_question = True
-
             if is_new_question:
                 print("Detected new question — resetting conversation state")
                 self.chatbot.conversation_state = {
                     'current_emergency': None,
                     'current_followup_index': 0,
                     'waiting_for_followup': False,
-                    'last_bot_message': '',
-                    '_details_emergency': None,
                 }
                 self._asked_followup_questions = set()
                 in_conversation = False
