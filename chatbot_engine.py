@@ -84,6 +84,11 @@ _KEYWORD_EXPANSIONS = {
         'not breathing at all', 'has no pulse', 'collapsed not responding',
         'lifeless on floor',
     ],
+    'cpr cardiopulmonary resuscitation': [
+        'cpr', 'cardiopulmonary resuscitation', 'perform cpr', 'do cpr',
+        'chest compressions', 'rescue breathing', 'resuscitation',
+        'how to revive', 'revive someone',
+    ],
     'choking airway blocked cyanosis': [
         'choke', 'choking', 'cant breathe', "can't breathe", 'cannot breathe',
         'airway blocked', 'something stuck throat', 'swallowed wrong way',
@@ -230,6 +235,8 @@ _PRIORITY_KEYWORDS = {
     'unconscious':       'unconscious unresponsive',
     'no pulse':          'heart attack cardiac arrest',
     'cardiac arrest':    'heart attack cardiac arrest',
+    'cpr':               'cpr cardiopulmonary resuscitation',
+    'chest compressions':'cpr cardiopulmonary resuscitation',
     'severe bleeding':   'severe bleeding wound',
     'anaphylaxis':       'allergic reaction anaphylaxis',
     'stroke':            'stroke',

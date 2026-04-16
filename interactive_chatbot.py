@@ -7,7 +7,7 @@ from chatbot_engine import (
     _VAGUE_INPUTS, _expand_query, _extract_core_query,
     _BLUE_CYANOSIS_CONTEXT, _BLUE_BANDAGE_EXCLUSIONS,
     _apply_priority_boost, _detect_emergency_categories,
-    _build_doc_text,
+    _build_doc_text, _correct_spelling, _lemmatize_text,
 )
 
 
@@ -56,13 +56,15 @@ class InteractiveFirstAidChatbot:
 
         # --- Path A: full query -----------------------------------------------
         expanded_full = _expand_query(user_question)
-        emb_full = self.vectorizer.transform([expanded_full])
+        lemmatized_full = _lemmatize_text(expanded_full)
+        emb_full = self.vectorizer.transform([lemmatized_full])
         sims_full = cosine_similarity(emb_full, self.question_embeddings)[0]
 
         # --- Path B: core query (filler stripped, then expanded) ---------------
         core_text = _extract_core_query(user_question)
         expanded_core = _expand_query(core_text)
-        emb_core = self.vectorizer.transform([expanded_core])
+        lemmatized_core = _lemmatize_text(expanded_core)
+        emb_core = self.vectorizer.transform([lemmatized_core])
         sims_core = cosine_similarity(emb_core, self.question_embeddings)[0]
 
         # Element-wise max: whichever representation scored higher wins
@@ -76,7 +78,19 @@ class InteractiveFirstAidChatbot:
         best_match_idx = np.argmax(similarities)
         best_score = similarities[best_match_idx]
 
-        print(f"[InteractiveChatbot] query={user_question!r:.60}  score={best_score:.4f}  threshold={threshold}  matched={self.questions[best_match_idx]!r:.60}")
+        # ── Debug: expanded queries, top-3 matches, threshold decision ─────────
+        print(f"\n[DEBUG] --- find_best_match ---")
+        print(f"[DEBUG] query after expansion (Path A): {expanded_full!r:.120}")
+        print(f"[DEBUG] query lemmatized   (Path A): {lemmatized_full!r:.120}")
+        print(f"[DEBUG] core after expansion (Path B): {expanded_core!r:.120}")
+        print(f"[DEBUG] core lemmatized    (Path B): {lemmatized_core!r:.120}")
+        top3_idx = np.argsort(similarities)[-3:][::-1]
+        print(f"[DEBUG] Top-3 matches:")
+        for rank, idx in enumerate(top3_idx, 1):
+            print(f"  #{rank}  score={similarities[idx]:.4f}  scenario={self.questions[idx]!r:.80}")
+        decision = "MATCH" if best_score >= threshold else "NO MATCH (below threshold)"
+        print(f"[DEBUG] threshold={threshold}  best_score={best_score:.4f}  decision={decision}")
+        print(f"[DEBUG] ----------------------------\n")
 
         if best_score < threshold:
             return None, 0
@@ -268,6 +282,13 @@ class InteractiveFirstAidChatbot:
         if not user_input:
             return "Please describe your emergency or ask a first aid question."
 
+        corrected = _correct_spelling(user_input)
+        if corrected != user_input:
+            print(f"[DEBUG] Spell correction: {user_input!r} → {corrected!r}")
+        else:
+            print(f"[DEBUG] Spell correction: no changes ({user_input!r})")
+        user_input = corrected
+
         user_lower = user_input.lower()
 
         # ── Priority safety override: blue skin/lips/face = oxygen emergency ──
@@ -449,7 +470,7 @@ class InteractiveFirstAidChatbot:
             return "I'm not sure about that. Could you rephrase? Try asking about bleeding, choking, burns, CPR, fractures, or other common emergencies."
 
         # Low confidence — found something but not certain enough to give an answer
-        if confidence < 0.40:
+        if confidence < 0.30:
             return (
                 "I found something related, but I'm not confident it matches your situation. "
                 "Could you describe the emergency in more detail?\n\n"
