@@ -469,8 +469,10 @@ class InteractiveFirstAidChatbot:
         if emergency_data is None:
             return "I'm not sure about that. Could you rephrase? Try asking about bleeding, choking, burns, CPR, fractures, or other common emergencies."
 
-        # Low confidence — found something but not certain enough to give an answer
-        if confidence < 0.30:
+        # Low confidence — found something but not certain enough to give an answer.
+        # Threshold kept below find_best_match's threshold (0.25) so any match
+        # that passes the matching stage always receives a full answer.
+        if confidence < 0.10:
             return (
                 "I found something related, but I'm not confident it matches your situation. "
                 "Could you describe the emergency in more detail?\n\n"
