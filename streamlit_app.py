@@ -508,8 +508,21 @@ def _build_eval_excel() -> bytes:
     return buf.getvalue()
 
 
-def detect_timer_need(response_text):
+def detect_timer_need(response_text, user_input=''):
+    import re
     response_lower = response_text.lower()
+    user_lower = user_input.lower()
+
+    # Bleeding questions must NEVER trigger any timer.
+    _bleed_words = ['bleed', 'bleeding', 'blood loss', 'hemorrhage', 'haemorrhage']
+    _is_bleeding = any(w in user_lower for w in _bleed_words)
+    # Only suppress if the question isn't also clearly about CPR, burns, or choking.
+    _non_bleed_emergency = any(w in user_lower for w in [
+        'cpr', 'cardiac', 'heart attack', 'burn', 'chok', 'heimlich', 'thrust',
+    ])
+    if _is_bleeding and not _non_bleed_emergency:
+        return None
+
     timers = {
         'cpr_cycle': {
             'keywords': ['cpr', 'chest compression', 'compressions'],
@@ -529,7 +542,11 @@ def detect_timer_need(response_text):
     }
     for timer_type, info in timers.items():
         if timer_type == 'burn_cooling':
-            if 'burn' in response_lower and any(k in response_lower for k in info['keywords']):
+            # Use word-boundary matching so "burning sensation" in a wound/bleeding
+            # response does not falsely satisfy the burn guard.
+            burn_in_response = bool(re.search(r'\bburn(s|ed)?\b', response_lower))
+            burn_in_user = bool(re.search(r'\bburn(s|ed)?\b', user_lower))
+            if (burn_in_response or burn_in_user) and any(k in response_lower for k in info['keywords']):
                 return info
         else:
             if any(k in response_lower for k in info['keywords']):
@@ -1751,21 +1768,25 @@ def show_chat_page():
                 # (ulq) below still runs so a user who genuinely introduces a
                 # new emergency mid-conversation still gets the correct timer.
                 timer_needed = (
-                    None if _was_in_followup else detect_timer_need(bot_response)
+                    None if _was_in_followup else detect_timer_need(bot_response, user_input)
                 )
                 if not timer_needed:
                     ulq = user_input.lower()
-                    if any(w in ulq for w in ['cpr', 'cardiac', 'heart attack', 'قلب', 'إنعاش',
-                                               'انعاش', 'القلب', 'قلبي']):
-                        timer_needed = dict(duration=120, title='❤️ CPR Cycle Timer',
-                                            instructions='30 compressions, then 2 breaths - repeat')
-                    elif any(w in ulq for w in ['burn', 'حرق', 'حروق', 'الحروق',
-                                                 'brûlure', 'quemadura']):
-                        timer_needed = dict(duration=1200, title='🔥 Burn Cooling Timer',
-                                            instructions='Keep burn under cool running water')
-                    elif any(w in ulq for w in ['chok', 'اختناق', 'الاختناق', 'étouff', 'asfixia']):
-                        timer_needed = dict(duration=300, title='🫁 Choking Response Timer',
-                                            instructions='Continue attempts until object dislodges')
+                    # Bleeding questions must never trigger a timer via the fallback path either.
+                    _fb_bleed = any(w in ulq for w in ['bleed', 'bleeding', 'blood loss', 'hemorrhage', 'haemorrhage'])
+                    _fb_override = any(w in ulq for w in ['cpr', 'cardiac', 'heart attack', 'burn', 'chok', 'heimlich'])
+                    if not (_fb_bleed and not _fb_override):
+                        if any(w in ulq for w in ['cpr', 'cardiac', 'heart attack', 'قلب', 'إنعاش',
+                                                   'انعاش', 'القلب', 'قلبي']):
+                            timer_needed = dict(duration=120, title='❤️ CPR Cycle Timer',
+                                                instructions='30 compressions, then 2 breaths - repeat')
+                        elif any(w in ulq for w in ['burn', 'حرق', 'حروق', 'الحروق',
+                                                     'brûlure', 'quemadura']):
+                            timer_needed = dict(duration=1200, title='🔥 Burn Cooling Timer',
+                                                instructions='Keep burn under cool running water')
+                        elif any(w in ulq for w in ['chok', 'اختناق', 'الاختناق', 'étouff', 'asfixia']):
+                            timer_needed = dict(duration=300, title='🫁 Choking Response Timer',
+                                                instructions='Continue attempts until object dislodges')
     
                 if timer_needed:
                     # If the chatbot returned a low-confidence message but the
