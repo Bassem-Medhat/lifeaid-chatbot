@@ -420,13 +420,13 @@ class InteractiveFirstAidChatbot:
                     next_qa = follow_up_qa[self.conversation_state['current_followup_index']]
                     return f"{response_given}\n\nNow, {next_qa['question']}"
                 else:
-                    # No more follow-ups - ask if they want detailed steps.
+                    # No more follow-ups — close the conversation cleanly.
                     # Reset all three fields together so current_emergency never
                     # lingers as a zombie while waiting_for_followup is False.
                     self.conversation_state['waiting_for_followup'] = False
                     self.conversation_state['current_emergency'] = None
                     self.conversation_state['current_followup_index'] = 0
-                    return f"{response_given}\n\nWould you like more detailed step-by-step instructions?"
+                    return f"{response_given}\n\nStay safe. Call emergency services if the situation gets worse or you need further help. \U0001f198"
 
         # Check if asking for more details after follow-ups completed
         if self.conversation_state['current_emergency'] and not self.conversation_state['waiting_for_followup']:
