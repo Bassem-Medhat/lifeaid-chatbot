@@ -123,7 +123,7 @@ st.markdown(f"""
 
 *, *::before, *::after {{
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
-    box-sizing: border-box;
+    box-sizing: border-box !important;
 }}
 
 #MainMenu, footer, header {{ visibility: hidden !important; }}
@@ -132,7 +132,7 @@ st.markdown(f"""
 /* ── App shell ── */
 .stApp {{
     background: {_C['bg']} !important;
-    transition: background 0.25s ease;
+    transition: background 0.25s ease !important;
 }}
 .main .block-container {{
     padding: 1.75rem 2.5rem 2rem 2.5rem !important;
@@ -243,8 +243,8 @@ label {{ color: {_C['text']} !important; }}
     padding: 0.15rem 0 !important;
 }}
 @keyframes msgIn {{
-    from {{ opacity: 0; transform: translateY(10px); }}
-    to   {{ opacity: 1; transform: translateY(0); }}
+    from {{ opacity: 0 !important; transform: translateY(10px) !important; }}
+    to   {{ opacity: 1 !important; transform: translateY(0) !important; }}
 }}
 
 /* ── Progress bar ── */
@@ -308,27 +308,27 @@ hr {{
 }}
 
 /* ── Scrollbar ── */
-::-webkit-scrollbar {{ width: 5px; height: 5px; }}
-::-webkit-scrollbar-track {{ background: transparent; }}
-::-webkit-scrollbar-thumb {{ background: {_C['border']}; border-radius: 99px; }}
-::-webkit-scrollbar-thumb:hover {{ background: {_C['muted']}; }}
+::-webkit-scrollbar {{ width: 5px !important; height: 5px !important; }}
+::-webkit-scrollbar-track {{ background: transparent !important; }}
+::-webkit-scrollbar-thumb {{ background: {_C['border']} !important; border-radius: 99px !important; }}
+::-webkit-scrollbar-thumb:hover {{ background: {_C['muted']} !important; }}
 
 /* ── Animations ── */
 @keyframes fadeUp {{
-    from {{ opacity: 0; transform: translateY(18px); }}
-    to   {{ opacity: 1; transform: translateY(0); }}
+    from {{ opacity: 0 !important; transform: translateY(18px) !important; }}
+    to   {{ opacity: 1 !important; transform: translateY(0) !important; }}
 }}
 @keyframes fadeIn {{
-    from {{ opacity: 0; }}
-    to   {{ opacity: 1; }}
+    from {{ opacity: 0 !important; }}
+    to   {{ opacity: 1 !important; }}
 }}
 @keyframes pulse {{
-    0%, 100% {{ opacity: 1; }}
-    50%       {{ opacity: 0.65; }}
+    0%, 100% {{ opacity: 1 !important; }}
+    50%       {{ opacity: 0.65 !important; }}
 }}
 @keyframes timerGlow {{
-    0%, 100% {{ box-shadow: 0 0 0 0 {_C['primary']}40; }}
-    50%       {{ box-shadow: 0 0 0 8px {_C['primary']}00; }}
+    0%, 100% {{ box-shadow: 0 0 0 0 {_C['primary']}40 !important; }}
+    50%       {{ box-shadow: 0 0 0 8px {_C['primary']}00 !important; }}
 }}
 
 /* ── Hero cards — force white text over any scoped overrides ── */
