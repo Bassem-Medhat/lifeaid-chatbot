@@ -118,6 +118,8 @@ _KEYWORD_EXPANSIONS = {
         # Natural conversational phrases
         'bleeding badly', 'cut my', 'deep cut on',
         'knife cut', 'glass cut', 'bleeding from my',
+        # High-priority first-person bleeding phrases (covers "im bleeding" after normalisation)
+        'i am bleeding', "i'm bleeding", 'im bleeding',
     ],
     'burn injury scald': [
         'burn', 'burned', 'burning', 'burnt', 'scald', 'scalded',
@@ -238,6 +240,10 @@ _PRIORITY_KEYWORDS = {
     'cpr':               'cpr cardiopulmonary resuscitation',
     'chest compressions':'cpr cardiopulmonary resuscitation',
     'severe bleeding':   'severe bleeding wound',
+    'bleeding':          'severe bleeding wound',
+    'im bleeding':       'severe bleeding wound',
+    'i am bleeding':     'severe bleeding wound',
+    "i'm bleeding":      'severe bleeding wound',
     'anaphylaxis':       'allergic reaction anaphylaxis',
     'stroke':            'stroke',
     'seizure':           'seizure convulsion',
@@ -473,7 +479,9 @@ def _expand_query(user_question):
       "chokng"   → "choking"   → appends "choking airway blocked cyanosis"
       "siezure"  → "seizure"   → appends "seizure convulsion"
     """
-    lower = user_question.lower()
+    # Normalise informal "im" → "i am" so "im bleeding" is treated the same as
+    # "I am bleeding" in all three matching phases below.
+    lower = re.sub(r'\bim\b', 'i am', user_question.lower())
     additions = []
     already_matched = set()
 
