@@ -222,6 +222,14 @@ _KEYWORD_EXPANSIONS = {
         'sprain', 'sprained', 'strain', 'strained', 'twisted ankle',
         'twisted wrist', 'rolled ankle',
     ],
+    'animal bite dog cat': [
+        'dog bite', 'dog bit', 'dog bit me', 'a dog bit me',
+        'bitten by dog', 'bitten by a dog', 'dog attacked', 'dog attack',
+        'cat bite', 'cat bit', 'cat bit me', 'bitten by cat',
+        'cat scratch', 'cat scratched',
+        'animal bite', 'animal bit', 'bitten by animal', 'animal attacked',
+        'animal attack', 'bitten by an animal',
+    ],
 }
 
 
@@ -265,6 +273,21 @@ _PRIORITY_KEYWORDS = {
     # Diabetic emergencies
     'diabetic':          'diabetic emergency hypoglycemia',
     'hypoglycemia':      'diabetic emergency hypoglycemia',
+    # Animal / dog / cat bites — must beat spider bite and other bite scenarios
+    'dog bite':          'animal bite dog cat',
+    'dog bit':           'animal bite dog cat',
+    'dog attacked':      'animal bite dog cat',
+    'dog attack':        'animal bite dog cat',
+    'cat bite':          'animal bite dog cat',
+    'cat bit':           'animal bite dog cat',
+    'cat scratch':       'animal bite dog cat',
+    'animal bite':       'animal bite dog cat',
+    'animal bit':        'animal bite dog cat',
+    'bitten by dog':     'animal bite dog cat',
+    'bitten by cat':     'animal bite dog cat',
+    'bitten by animal':  'animal bite dog cat',
+    'animal attacked':   'animal bite dog cat',
+    'animal attack':     'animal bite dog cat',
 }
 
 
