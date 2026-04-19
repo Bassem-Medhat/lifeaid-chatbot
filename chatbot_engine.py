@@ -644,14 +644,14 @@ class FirstAidChatbot:
             print(f"Error loading data: {e}")
             return []
 
-    def find_best_match(self, user_question, threshold=0.15, clarification_threshold=0.22):
+    def find_best_match(self, user_question, threshold=0.05, clarification_threshold=0.10):
         """
         Find the best matching answer for user's question.
 
         Scores are divided into three zones:
-          < threshold              → no useful match found       (0.15)
-          threshold – clarification_threshold → low confidence   (0.15–0.22)
-          >= clarification_threshold           → good match       (0.22+)
+          < threshold              → no useful match found       (0.05)
+          threshold – clarification_threshold → low confidence   (0.05–0.10)
+          >= clarification_threshold           → good match       (0.10+)
 
         Args:
             user_question: The question asked by the user
@@ -875,7 +875,7 @@ if __name__ == "__main__":
             print(f"\n  Input : {_test_query!r}")
             print(f"  Score : {_best_score:.4f}  |  Matched Q: {bot.questions[_best_idx]}")
             _response = bot.get_response(_test_query)
-            _label = "FOUND" if _best_score >= 0.22 else ("LOW-CONF" if _best_score >= 0.15 else "NO MATCH")
+            _label = "FOUND" if _best_score >= 0.10 else ("LOW-CONF" if _best_score >= 0.05 else "NO MATCH")
             print(f"  Result: [{_label}]  Response preview: {_response[:80]}...")
         print("\n" + "=" * 80 + "\n")
 
