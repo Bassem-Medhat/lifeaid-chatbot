@@ -631,7 +631,7 @@ def handle_quick_help(topic):
             timer=None, default_sev='urgent',
         ),
         'choking': dict(
-            query='How do I help a choking person?',
+            query='What to do if someone is chocking?',
             timer=dict(duration=300, title='🫁 Choking Response Timer',
                        instructions='Continue attempts until object dislodges'),
             default_sev='critical',
