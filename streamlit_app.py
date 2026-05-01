@@ -637,7 +637,7 @@ def handle_quick_help(topic):
             default_sev='critical',
         ),
         'cpr': dict(
-            query='How to perform CPR on someone who is not breathing?',
+            query='What to do if someone has a cardiac arrest?',
             timer=dict(duration=120, title='❤️ CPR Cycle Timer',
                        instructions='30 compressions, then 2 breaths - repeat'),
             default_sev='critical',
