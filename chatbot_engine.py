@@ -81,8 +81,7 @@ _KEYWORD_EXPANSIONS = {
         'pressure in chest', 'tightness in chest', 'squeezing in chest',
         'pain radiating', 'radiating to arm',
         # CPR / unresponsive natural phrases
-        'not breathing at all', 'has no pulse', 'collapsed not responding',
-        'lifeless on floor',
+        'not breathing at all', 'has no pulse', 'lifeless on floor',
     ],
     'cpr cardiopulmonary resuscitation': [
         'cpr', 'cardiopulmonary resuscitation', 'perform cpr', 'do cpr',
@@ -268,6 +267,10 @@ _PRIORITY_KEYWORDS = {
     'heart attack':      'heart attack cardiac arrest',
     'left arm pain':     'heart attack cardiac arrest',
     'chest pain':        'heart attack cardiac arrest',
+    # Use the dedicated entry's own question as canonical so it self-boosts far above
+    # exercise/angina entries that lack 'left arm' vocabulary
+    'left arm hurts':    'What to do if someone has chest pain and their left arm hurts',
+    'arm hurts chest':   'What to do if someone has chest pain and their left arm hurts',
     'allergic reaction': 'allergic reaction anaphylaxis',
     'broken bone':       'broken bone fracture',
     # Burns — missing from original; 'burn' substring matches burning/burned/burnt/scald
