@@ -1638,7 +1638,7 @@
   {
     "id": 19,
     "question": "Someone is choking — what do I do right now?",
-    "answer": "I know this is frightening, but act fast — you can help.\nStand behind the person and lean them slightly forward.\nWrap your arms around their waist.\nMake a fist and place it between the belly button and rib cage.\nGrab your fist with your other hand.\nPull sharply inward and upward in quick thrusts.\nDo five thrusts, then repeat until the object comes out.\nIf the person becomes unconscious, call emergency services immediately",
+    "answer": "I know this is frightening, but act fast — you can help.\n\nStand behind the person and lean them slightly forward.\n\nWrap your arms around their waist. Make a fist and place it between the belly button and rib cage. Grab your fist with your other hand.\n\nPull sharply inward and upward in quick thrusts. Do five thrusts, then repeat until the object comes out.\n\nIf the person becomes unconscious, call emergency services immediately.",
     "keywords": [
       "Choking\nAbdominal thrusts\nHeimlich maneuver\nAirway",
       "food stuck in throat",
@@ -1651,7 +1651,9 @@
       "airway blocked",
       "clutching throat",
       "high pitched breathing noise",
-      "unable to cough"
+      "unable to cough",
+      "chocking",
+      "what to do choking"
     ],
     "severity": "CRITICAL",
     "follow_up_qa": [
@@ -1711,7 +1713,7 @@
   {
     "id": 20,
     "question": "How do I help a choking person?",
-    "answer": "I know this is frightening, but act fast — you can help.\nStand behind the person and lean them slightly forward.\nWrap your arms around their waist.\nMake a fist and place it between the belly button and rib cage.\nGrab your fist with your other hand.\nPull sharply inward and upward in quick thrusts.\nDo five thrusts, then repeat until the object comes out.\nIf the person becomes unconscious, call emergency services immediately",
+    "answer": "I know this is frightening, but act fast — you can help.\n\nStand behind the person and lean them slightly forward.\n\nWrap your arms around their waist. Make a fist and place it between the belly button and rib cage. Grab your fist with your other hand.\n\nPull sharply inward and upward in quick thrusts. Do five thrusts, then repeat until the object comes out.\n\nIf the person becomes unconscious, call emergency services immediately.",
     "keywords": [
       "Choking\nAbdominal thrusts\nHeimlich maneuver\nAirway",
       "food stuck in throat",
@@ -1724,7 +1726,9 @@
       "airway blocked",
       "clutching throat",
       "high pitched breathing noise",
-      "unable to cough"
+      "unable to cough",
+      "chocking",
+      "what to do choking"
     ],
     "severity": "CRITICAL",
     "follow_up_qa": [
@@ -1784,7 +1788,7 @@
   {
     "id": 21,
     "question": "What are the steps for choking first aid?",
-    "answer": "I know this is frightening, but act fast — you can help.\nStand behind the person and lean them slightly forward.\nWrap your arms around their waist.\nMake a fist and place it between the belly button and rib cage.\nGrab your fist with your other hand.\nPull sharply inward and upward in quick thrusts.\nDo five thrusts, then repeat until the object comes out.\nIf the person becomes unconscious, call emergency services immediately",
+    "answer": "I know this is frightening, but act fast — you can help.\n\nStand behind the person and lean them slightly forward.\n\nWrap your arms around their waist. Make a fist and place it between the belly button and rib cage. Grab your fist with your other hand.\n\nPull sharply inward and upward in quick thrusts. Do five thrusts, then repeat until the object comes out.\n\nIf the person becomes unconscious, call emergency services immediately.",
     "keywords": [
       "Choking\nAbdominal thrusts\nHeimlich maneuver\nAirway",
       "food stuck in throat",
@@ -1797,7 +1801,9 @@
       "airway blocked",
       "clutching throat",
       "high pitched breathing noise",
-      "unable to cough"
+      "unable to cough",
+      "chocking",
+      "what to do choking"
     ],
     "severity": "CRITICAL",
     "follow_up_qa": [

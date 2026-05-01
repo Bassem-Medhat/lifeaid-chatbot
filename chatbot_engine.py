@@ -390,6 +390,7 @@ _CUSTOM_CORRECTIONS = {
     'poisond':   'poisoned',
     'hart':      'heart',   # "hart" is a valid word (deer) — force medical meaning
     'chokng':    'choking',
+    'chocking':  'choking',
     'bleding':   'bleeding',
     'unconcious':'unconscious',
     'unconcius': 'unconscious',
@@ -803,6 +804,25 @@ class FirstAidChatbot:
                     return answer
         return None
 
+    def _get_choking_action_answer(self):
+        """Return the answer for the main choking first-aid action entry."""
+        for item in self.data:
+            kws = item.get('keywords', [])
+            if 'chocking' in kws and item.get('severity') == 'CRITICAL':
+                answer = item.get('answer', '').strip()
+                if answer.startswith('"') and answer.endswith('"'):
+                    answer = answer[1:-1]
+                return answer
+        # Fallback: first CRITICAL choking entry with heimlich/abdominal in answer
+        for item in self.data:
+            ans = item.get('answer', '').lower()
+            if item.get('severity') == 'CRITICAL' and ('abdominal thrust' in ans or 'heimlich' in ans):
+                answer = item.get('answer', '').strip()
+                if answer.startswith('"') and answer.endswith('"'):
+                    answer = answer[1:-1]
+                return answer
+        return None
+
     def _get_cyanosis_answer(self):
         """Return the answer for the dedicated blue-skin/cyanosis entry."""
         for item in self.data:
@@ -835,10 +855,18 @@ class FirstAidChatbot:
         if not user_question or user_question.strip() == "":
             return "Please ask me a first aid or emergency question."
 
+        original_lower_q = user_question.lower()
         user_question = _correct_spelling(user_question)
         lower_q = user_question.lower()
         words = lower_q.strip().split()
         words_set = set(words)
+
+        # ── Priority override: "chocking" (misspelling) = choking action scenario ──
+        if 'chocking' in original_lower_q:
+            print("Chocking-misspelling override triggered")
+            override = self._get_choking_action_answer()
+            if override:
+                return "\U0001f6a8 CRITICAL EMERGENCY - IMMEDIATE ACTION NEEDED\n\n" + override
 
         # ── Priority override: collapsed + not responding = unresponsive scenario ──
         # "Collapsed and not responding" must always route to the unresponsive
