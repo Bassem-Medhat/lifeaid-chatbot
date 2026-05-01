@@ -73,8 +73,8 @@ _KEYWORD_EXPANSIONS = {
         'heart attack', 'cardiac arrest', 'cardiac', 'heart stopped',
         'chest pain', 'chest tightness', 'chest pressure', 'myocardial',
         'heart failure', 'palpitations', 'heart pain',
-        'no heartbeat', 'no pulse', 'not responding', 'lifeless',
-        'not moving', 'fell down not breathing', 'dropped dead',
+        'no heartbeat', 'no pulse', 'lifeless',
+        'fell down not breathing', 'dropped dead',
         'not waking', 'wont wake',
         # Additional symptom descriptions
         'jaw pain', 'left arm pain', 'pain down arm',
@@ -176,7 +176,8 @@ _KEYWORD_EXPANSIONS = {
         # Limp / not moving / unresponsive descriptions
         'limp', 'went limp', 'body limp', 'gone limp',
         'not moving', 'stopped moving',
-        'not responding to', 'not reacting',
+        'not responding to', 'not reacting', 'not responding',
+        'collapsed not responding', 'wont respond',
         # Natural conversational phrases
         'fell and wont', 'not responding to me', 'eyes rolled back',
     ],
@@ -260,8 +261,13 @@ _PRIORITY_KEYWORDS = {
     'overdose':          'poisoning overdose',
     'poisoned':          'poisoning overdose',
     'collapsed':         'unconscious unresponsive',
+    'not responding':    'unconscious unresponsive',
+    'wont respond':      'unconscious unresponsive',
+    'unresponsive':      'unconscious unresponsive',
     'turning blue':      'choking airway blocked cyanosis',
     'heart attack':      'heart attack cardiac arrest',
+    'left arm pain':     'heart attack cardiac arrest',
+    'chest pain':        'heart attack cardiac arrest',
     'allergic reaction': 'allergic reaction anaphylaxis',
     'broken bone':       'broken bone fracture',
     # Burns — missing from original; 'burn' substring matches burning/burned/burnt/scald
@@ -753,6 +759,47 @@ class FirstAidChatbot:
             'low_confidence': False,
         }
 
+    def _get_unresponsive_answer(self):
+        """Return the answer for the unconscious/unresponsive scenario."""
+        for item in self.data:
+            kws = item.get('keywords', [])
+            if 'not responding' in kws and 'collapsed' in kws:
+                answer = item.get('answer', '').strip()
+                if answer.startswith('"') and answer.endswith('"'):
+                    answer = answer[1:-1]
+                return answer
+        # Fallback: first CRITICAL entry with 'unconscious' and 'recovery position' in answer
+        for item in self.data:
+            q = item.get('question', '').lower()
+            ans = item.get('answer', '').lower()
+            if ('unconscious' in q or 'unresponsive' in q) and 'recovery position' in ans:
+                answer = item.get('answer', '').strip()
+                if answer.startswith('"') and answer.endswith('"'):
+                    answer = answer[1:-1]
+                return answer
+        return None
+
+    def _get_general_heart_attack_answer(self):
+        """Return the answer for the general heart attack (not women's-specific) entry."""
+        for item in self.data:
+            q = item.get('question', '').lower()
+            kws = item.get('keywords', [])
+            if ('heart attack' in q or 'treat heart' in q) and 'chest pain left arm' in kws:
+                answer = item.get('answer', '').strip()
+                if answer.startswith('"') and answer.endswith('"'):
+                    answer = answer[1:-1]
+                return answer
+        # Fallback: first CRITICAL heart attack entry with aspirin in answer
+        for item in self.data:
+            q = item.get('question', '').lower()
+            if 'heart attack' in q and item.get('severity') == 'CRITICAL':
+                answer = item.get('answer', '').strip()
+                if 'aspirin' in answer.lower() and 'women' not in q:
+                    if answer.startswith('"') and answer.endswith('"'):
+                        answer = answer[1:-1]
+                    return answer
+        return None
+
     def _get_cyanosis_answer(self):
         """Return the answer for the dedicated blue-skin/cyanosis entry."""
         for item in self.data:
@@ -789,6 +836,30 @@ class FirstAidChatbot:
         lower_q = user_question.lower()
         words = lower_q.strip().split()
         words_set = set(words)
+
+        # ── Priority override: collapsed + not responding = unresponsive scenario ──
+        # "Collapsed and not responding" must always route to the unresponsive
+        # first-aid scenario, not water rescue or cardiac arrest entries.
+        _water_words = frozenset({'water', 'pool', 'lake', 'river', 'sea', 'ocean',
+                                   'drowning', 'drowned', 'swimming', 'submerged'})
+        if (('collapsed' in lower_q or 'not responding' in lower_q
+                or 'unresponsive' in lower_q or 'wont respond' in lower_q)
+                and not (_water_words & words_set)):
+            print("Collapsed/unresponsive override triggered")
+            override = self._get_unresponsive_answer()
+            if override:
+                return "\U0001f6a8 CRITICAL EMERGENCY - IMMEDIATE ACTION NEEDED\n\n" + override
+
+        # ── Priority override: chest pain + arm pain = general heart attack ──
+        # Chest pain combined with arm (especially left arm) pain is the classic
+        # presentation of a heart attack. This must always route to the general
+        # heart attack entry, not the women's-specific signs entry.
+        if ('chest' in words_set and 'pain' in words_set
+                and ('arm' in words_set or 'left' in words_set)):
+            print("Chest-pain + arm override triggered")
+            override = self._get_general_heart_attack_answer()
+            if override:
+                return "\U0001f6a8 CRITICAL EMERGENCY - IMMEDIATE ACTION NEEDED\n\n" + override
 
         # ── Priority safety override: blue skin/lips/face = oxygen emergency ──
         # This check runs before ANY embedding work.  "blue" next to body-part or
