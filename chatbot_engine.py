@@ -243,12 +243,12 @@ _KEYWORD_EXPANSIONS = {
 _PRIORITY_KEYWORDS = {
     'choking':           'choking airway blocked cyanosis heimlich abdominal thrusts back blows',
     'chocking':          'choking airway blocked cyanosis heimlich abdominal thrusts back blows',
-    'not breathing':     'heart attack cardiac arrest',
+    'not breathing':     'cardiopulmonary resuscitation cardiac arrest unresponsive',
     'unconscious':       'unconscious unresponsive',
-    'no pulse':          'heart attack cardiac arrest',
-    'cardiac arrest':    'heart attack cardiac arrest',
+    'no pulse':          'cardiopulmonary resuscitation cardiac arrest unresponsive',
+    'cardiac arrest':    'cardiopulmonary resuscitation cardiac arrest unresponsive',
     'cpr':               'cpr cardiopulmonary resuscitation',
-    'chest compressions':'cpr cardiopulmonary resuscitation',
+    'chest compressions':'cardiopulmonary resuscitation cardiac arrest unresponsive',
     'severe bleeding':   'severe bleeding wound',
     'bleeding':          'severe bleeding wound',
     'im bleeding':       'severe bleeding wound',
@@ -269,15 +269,18 @@ _PRIORITY_KEYWORDS = {
     'heart attack':      'heart attack cardiac arrest',
     'left arm pain':     'heart attack cardiac arrest',
     'chest pain':        'heart attack cardiac arrest',
+    'not breathing cardiac': 'cardiopulmonary resuscitation cardiac arrest unresponsive',
     # Use the dedicated entry's own question as canonical so it self-boosts far above
     # exercise/angina entries that lack 'left arm' vocabulary
     'left arm hurts':    'What to do if someone has chest pain and their left arm hurts',
     'arm hurts chest':   'What to do if someone has chest pain and their left arm hurts',
     'allergic reaction': 'allergic reaction anaphylaxis',
     'broken bone':       'broken bone fracture',
-    # Burns — missing from original; 'burn' substring matches burning/burned/burnt/scald
-    'burn':              'burn injury scald',
-    'scald':             'burn injury scald',
+    # Burns — canonical uses procedure-specific terms to favor ID=64 over unrelated burn scenarios
+    'burn':              'stop burning cool running water remove jewelry cover loosely non fluffy',
+    'scald':             'stop burning cool running water remove jewelry cover loosely non fluffy',
+    'burned':            'stop burning cool running water remove jewelry cover loosely non fluffy',
+    'burnt':             'stop burning cool running water remove jewelry cover loosely non fluffy',
     # Head trauma
     'head injury':       'head injury concussion',
     'concussion':        'head injury concussion',
