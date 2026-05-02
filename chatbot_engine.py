@@ -88,8 +88,9 @@ _KEYWORD_EXPANSIONS = {
         'chest compressions', 'rescue breathing', 'resuscitation',
         'how to revive', 'revive someone',
     ],
-    'choking airway blocked cyanosis': [
-        'choke', 'choking', 'cant breathe', "can't breathe", 'cannot breathe',
+    'choking airway blocked cyanosis heimlich abdominal thrusts back blows': [
+        'choke', 'choking', 'chocking',
+        'cant breathe', "can't breathe", 'cannot breathe',
         'airway blocked', 'something stuck throat', 'swallowed wrong way',
         'food stuck', 'throat blocked', 'object in throat',
         'something stuck', 'face turning red', 'face is red', 'turning red',
@@ -240,7 +241,8 @@ _KEYWORD_EXPANSIONS = {
 # user query, TF-IDF similarity scores for that emergency category are doubled
 # so the right answer always wins over weaker, less-specific matches.
 _PRIORITY_KEYWORDS = {
-    'choking':           'choking airway blocked cyanosis',
+    'choking':           'choking airway blocked cyanosis heimlich abdominal thrusts back blows',
+    'chocking':          'choking airway blocked cyanosis heimlich abdominal thrusts back blows',
     'not breathing':     'heart attack cardiac arrest',
     'unconscious':       'unconscious unresponsive',
     'no pulse':          'heart attack cardiac arrest',
@@ -263,7 +265,7 @@ _PRIORITY_KEYWORDS = {
     'not responding':    'unconscious unresponsive',
     'wont respond':      'unconscious unresponsive',
     'unresponsive':      'unconscious unresponsive',
-    'turning blue':      'choking airway blocked cyanosis',
+    'turning blue':      'choking airway blocked cyanosis heimlich abdominal thrusts back blows',
     'heart attack':      'heart attack cardiac arrest',
     'left arm pain':     'heart attack cardiac arrest',
     'chest pain':        'heart attack cardiac arrest',
@@ -509,7 +511,7 @@ def _expand_query(user_question):
     is ≥4 characters long is compared against every single-word trigger at ≥80%
     similarity.  This catches common misspellings such as:
       "bleding"  → "bleeding"  → appends "severe bleeding wound"
-      "chokng"   → "choking"   → appends "choking airway blocked cyanosis"
+      "chokng"   → "choking"   → appends "choking airway blocked cyanosis heimlich abdominal thrusts back blows"
       "siezure"  → "seizure"   → appends "seizure convulsion"
     """
     # Normalise informal "im" → "i am" so "im bleeding" is treated the same as
@@ -574,6 +576,13 @@ def _extract_core_query(text):
       "she hit her head on the table"        → "hit head table"
       "there is a lot of blood from my arm"  → "blood arm"
     """
+    _STRUCTURAL_PHRASES = re.compile(
+        r'\b(what\s+to\s+do\s+if|what\s+to\s+do\s+when|what\s+should\s+i\s+do|'
+        r'what\s+do\s+i\s+do|what\s+to\s+do|how\s+to\s+help|how\s+do\s+i|'
+        r'someone\s+is|person\s+is)\b',
+        re.IGNORECASE,
+    )
+    text = _STRUCTURAL_PHRASES.sub(' ', text)
     words = re.findall(r'\b[A-Za-z]+\b', text)
     core = [w for w in words if w.lower() not in _QUERY_STOPWORDS]
     return ' '.join(core) if core else text
