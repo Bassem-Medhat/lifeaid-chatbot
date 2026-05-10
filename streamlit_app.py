@@ -1477,22 +1477,23 @@ def show_chat_page():
                         severity = 'critical'
                     elif content.strip().startswith('⚠️'):
                         severity = 'urgent'
-                    elif content.strip().startswith('🟢'):
+                    elif content.startswith('🟢'):
                         severity = 'moderate'
                     else:
                         severity = 'normal'
-                    # If the immediately preceding assistant message already had
-                    # a severity color, this message is a follow-up → force normal
-                    if severity != 'normal':
-                        for _prev in reversed(st.session_state.chat_history[:idx]):
-                            if _prev['role'] == 'assistant':
-                                _pc = clean_response(_prev['content'])
-                                if (_pc.strip().startswith('🚨') or
-                                        _pc.strip().startswith('⚠️') or
-                                        _pc.strip().startswith('🟢')):
-                                    severity = 'normal'
+                    # For moderate: only show green background when 🟢 is the
+                    # absolute first character; anything else is a follow-up.
+                    if severity == 'moderate' and not content.startswith('🟢'):
+                        severity = 'normal'
+                    # Strip the severity label from the displayed text for
+                    # follow-up moderate messages (stored content lacks the header).
+                    _display = content
+                    if severity == 'moderate' and not message['content'].startswith('🟢 MODERATE'):
+                        for _lbl in ('🟢 MODERATE\n', '🟢 MODERATE'):
+                            if _display.startswith(_lbl):
+                                _display = _display[len(_lbl):]
                                 break
-                    formatted = content.replace('\n\n', '<br><br>').replace('\n', '<br>')
+                    formatted = _display.replace('\n\n', '<br><br>').replace('\n', '<br>')
     
                     content_hash = hashlib.md5(content.encode()).hexdigest()[:8]
                     message_id = f"msg_{idx}_{content_hash}"
