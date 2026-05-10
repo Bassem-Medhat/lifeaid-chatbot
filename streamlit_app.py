@@ -1477,7 +1477,7 @@ def show_chat_page():
                         severity = 'critical'
                     elif content.startswith('⚠️'):
                         severity = 'urgent'
-                    elif content.startswith('🟢'):
+                    elif content.startswith('🟢 MODERATE'):
                         severity = 'moderate'
                     else:
                         severity = 'normal'
