@@ -1481,6 +1481,17 @@ def show_chat_page():
                         severity = 'moderate'
                     else:
                         severity = 'normal'
+                    # If the immediately preceding assistant message already had
+                    # a severity color, this message is a follow-up → force normal
+                    if severity != 'normal':
+                        for _prev in reversed(st.session_state.chat_history[:idx]):
+                            if _prev['role'] == 'assistant':
+                                _pc = clean_response(_prev['content'])
+                                if (_pc.strip().startswith('🚨') or
+                                        _pc.strip().startswith('⚠️') or
+                                        _pc.strip().startswith('🟢')):
+                                    severity = 'normal'
+                                break
                     formatted = content.replace('\n\n', '<br><br>').replace('\n', '<br>')
     
                     content_hash = hashlib.md5(content.encode()).hexdigest()[:8]
