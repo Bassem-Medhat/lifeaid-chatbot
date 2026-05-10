@@ -1719,7 +1719,7 @@ def show_chat_page():
                 sev_map = {'CRITICAL': 'critical', 'URGENT': 'urgent',
                            'MODERATE': 'moderate', 'MILD': 'moderate'}
                 severity = sev_map.get(matched_severity.upper(), 'normal')
-                if severity == 'moderate' and '🟢 MODERATE' not in bot_response:
+                if severity == 'moderate' and '🟢 MODERATE' not in bot_response and not _was_in_followup:
                     bot_response = '🟢 MODERATE\n\n' + bot_response
             elif '🚨 CRITICAL' in bot_response or 'CRITICAL EMERGENCY' in response_upper:
                 severity = 'critical'
@@ -1727,7 +1727,7 @@ def show_chat_page():
                 severity = 'urgent'
             elif 'MODERATE' in response_upper:
                 severity = 'moderate'
-                if '🟢 MODERATE' not in bot_response:
+                if '🟢 MODERATE' not in bot_response and not _was_in_followup:
                     bot_response = '🟢 MODERATE\n\n' + bot_response
             else:
                 severity = 'normal'
