@@ -189,10 +189,13 @@ class InteractiveFirstAidChatbot:
             # Strip trailing separator lines
             text = re.sub(r'\s*={3,}\s*$', '', text).strip()
             # Strip leading severity label — must never appear on follow-up replies
-            for _emoji in ('🚨', '⚠️', '🟢'):
-                if text.startswith(_emoji):
-                    nl = text.find('\n')
-                    text = (text[nl:].lstrip('\n') if nl != -1 else '').strip()
+            _sev_prefixes = (
+                '🟢 MODERATE\n', '🚨 CRITICAL\n', '⚠️ URGENT\n',
+                '🟢 MODERATE',   '🚨 CRITICAL',   '⚠️ URGENT',
+            )
+            for _prefix in _sev_prefixes:
+                if text.startswith(_prefix):
+                    text = text[len(_prefix):].lstrip('\n').strip()
                     break
             return text
 
@@ -417,6 +420,16 @@ class InteractiveFirstAidChatbot:
 
                 # Get the appropriate conditional response
                 response_given = self.match_followup_response(user_input, current_qa)
+
+                # Belt-and-suspenders: strip any severity prefix that survived
+                _sev_prefixes = (
+                    '🟢 MODERATE\n', '🚨 CRITICAL\n', '⚠️ URGENT\n',
+                    '🟢 MODERATE',   '🚨 CRITICAL',   '⚠️ URGENT',
+                )
+                for _p in _sev_prefixes:
+                    if response_given.startswith(_p):
+                        response_given = response_given[len(_p):].lstrip('\n').strip()
+                        break
 
                 # Move to next follow-up question
                 self.conversation_state['current_followup_index'] += 1

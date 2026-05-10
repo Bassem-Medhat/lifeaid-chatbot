@@ -1473,11 +1473,11 @@ def show_chat_page():
                     is_arabic = any('\u0600' <= c <= '\u06FF' for c in content)
                     direction = "rtl" if is_arabic else "ltr"
                     text_align = "right" if is_arabic else "left"
-                    if content.startswith('🚨'):
+                    if content.strip().startswith('🚨'):
                         severity = 'critical'
-                    elif content.startswith('⚠️'):
+                    elif content.strip().startswith('⚠️'):
                         severity = 'urgent'
-                    elif content.startswith('🟢 MODERATE'):
+                    elif content.strip().startswith('🟢'):
                         severity = 'moderate'
                     else:
                         severity = 'normal'
