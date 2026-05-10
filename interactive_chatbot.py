@@ -188,6 +188,12 @@ class InteractiveFirstAidChatbot:
                 text = text[:text.index(marker)]
             # Strip trailing separator lines
             text = re.sub(r'\s*={3,}\s*$', '', text).strip()
+            # Strip leading severity label — must never appear on follow-up replies
+            for _emoji in ('🚨', '⚠️', '🟢'):
+                if text.startswith(_emoji):
+                    nl = text.find('\n')
+                    text = (text[nl:].lstrip('\n') if nl != -1 else '').strip()
+                    break
             return text
 
         def _has_word(word, text):
