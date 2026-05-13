@@ -1373,17 +1373,20 @@ def show_chat_page():
                     if st.session_state.timer_paused:
                         if st.button("▶️ Resume", key="resume_timer", use_container_width=True):
                             rem = st.session_state.timer_paused_remaining
+                            elapsed = timer_info['duration'] - rem
                             st.session_state.timer_start_time = (
                                 datetime.datetime.now()
-                                - datetime.timedelta(seconds=(timer_info['duration'] - rem))
+                                - datetime.timedelta(seconds=elapsed)
                             )
                             st.session_state.timer_paused = False
                             st.session_state.timer_paused_remaining = None
+                            st.session_state.skip_refresh = True
                             st.rerun()
                     else:
                         if st.button("⏸️ Pause", key="pause_timer", use_container_width=True):
                             st.session_state.timer_paused = True
                             st.session_state.timer_paused_remaining = remaining
+                            st.session_state.skip_refresh = True
                             st.rerun()
                 with tc2:
                     if st.button("🔄 Restart", key="restart_timer", use_container_width=True):
