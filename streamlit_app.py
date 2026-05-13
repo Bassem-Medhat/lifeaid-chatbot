@@ -83,6 +83,7 @@ for _k, _v in {
     'completion_sound_played': False, 'current_chat_saved': False,
     'dark_mode': True, 'show_settings': False, 'feedback_list': [],
     'show_emergency_numbers': False, 'feedback_key': 0, 'feedback_submitted': False,
+    'feedback_submitted_time': 0,
     'show_eval_download': False,
 }.items():
     if _k not in st.session_state:
@@ -1182,10 +1183,11 @@ def show_chat_page():
                     st.session_state.feedback_list.append(feedback_text.strip())
                     st.session_state.feedback_key += 1
                     st.session_state.feedback_submitted = True
+                    st.session_state.feedback_submitted_time = time.time()
                     st.rerun()
                 else:
                     st.warning("Please enter some feedback first.")
-            if st.session_state.feedback_submitted:
+            if st.session_state.feedback_submitted and time.time() - st.session_state.feedback_submitted_time < 20:
                 st.success("Thank you for your feedback!")
 
             st.markdown("---")
