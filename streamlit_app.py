@@ -1168,28 +1168,29 @@ def show_chat_page():
             # Section 2 – Feedback
             st.markdown("**📝 Feedback**")
 
-            def _reset_feedback_flag():
-                st.session_state.feedback_submitted = False
-
-            feedback_text = st.text_area(
-                "Share your feedback",
-                key=f"feedback_input_{st.session_state.feedback_key}",
-                label_visibility="collapsed",
-                placeholder="Type your feedback here…",
-                on_change=_reset_feedback_flag,
-            )
-            if st.button("Submit", key="submit_feedback", use_container_width=True):
-                if feedback_text.strip():
-                    st.session_state.feedback_list.append(feedback_text.strip())
-                    st.session_state.feedback_key += 1
-                    st.session_state.feedback_submitted = True
-                    st.session_state.feedback_submitted_time = time.time()
-                    st.rerun()
-                else:
-                    st.warning("Please enter some feedback first.")
             if st.session_state.get('feedback_submitted_time') and time.time() - st.session_state.feedback_submitted_time < 10:
                 st.success("Thank you for your feedback!")
                 st_autorefresh(interval=1000, limit=10, key="feedback_refresh")
+            else:
+                def _reset_feedback_flag():
+                    st.session_state.feedback_submitted = False
+
+                feedback_text = st.text_area(
+                    "Share your feedback",
+                    key=f"feedback_input_{st.session_state.feedback_key}",
+                    label_visibility="collapsed",
+                    placeholder="Type your feedback here…",
+                    on_change=_reset_feedback_flag,
+                )
+                if st.button("Submit", key="submit_feedback", use_container_width=True):
+                    if feedback_text.strip():
+                        st.session_state.feedback_list.append(feedback_text.strip())
+                        st.session_state.feedback_key += 1
+                        st.session_state.feedback_submitted = True
+                        st.session_state.feedback_submitted_time = time.time()
+                        st.rerun()
+                    else:
+                        st.warning("Please enter some feedback first.")
 
             st.markdown("---")
 
