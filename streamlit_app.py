@@ -68,11 +68,11 @@ if 'skip_refresh' not in st.session_state:
     st.session_state.skip_refresh = False
 
 if st.session_state.get('active_timer'):
-    if not st.session_state.get('timer_paused', False):
-        if not st.session_state.skip_refresh:
+    if not st.session_state.skip_refresh:
+        if not st.session_state.get('timer_paused', False):
             st_autorefresh(interval=1000, key="timer_refresh")
-    else:
-        st_autorefresh(interval=30000, key="timer_refresh")
+        else:
+            st_autorefresh(interval=30000, key="timer_refresh")
     st.session_state.skip_refresh = False
 
 # ─── Session state ────────────────────────────────────────────────────────────
@@ -1378,11 +1378,14 @@ def show_chat_page():
                             st.session_state.timer_start_time = datetime.datetime.now() - datetime.timedelta(seconds=elapsed)
                             st.session_state.timer_paused = False
                             st.session_state.timer_paused_remaining = None
+                            st.session_state.skip_refresh = True
                             st.rerun()
                     else:
                         if st.button("⏸️ Pause", key="pause_timer", use_container_width=True):
+                            elapsed_now = (datetime.datetime.now() - st.session_state.timer_start_time).total_seconds()
+                            st.session_state.timer_paused_remaining = max(0, timer_info['duration'] - elapsed_now)
                             st.session_state.timer_paused = True
-                            st.session_state.timer_paused_remaining = remaining
+                            st.session_state.skip_refresh = True
                             st.rerun()
                 with tc2:
                     if st.button("🔄 Restart", key="restart_timer", use_container_width=True):
