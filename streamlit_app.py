@@ -1187,8 +1187,9 @@ def show_chat_page():
                     st.rerun()
                 else:
                     st.warning("Please enter some feedback first.")
-            if st.session_state.feedback_submitted and time.time() - st.session_state.feedback_submitted_time < 20:
+            if st.session_state.get('feedback_submitted_time') and time.time() - st.session_state.feedback_submitted_time < 10:
                 st.success("Thank you for your feedback!")
+                st_autorefresh(interval=1000, limit=10, key="feedback_refresh")
 
             st.markdown("---")
 
