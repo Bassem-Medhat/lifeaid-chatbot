@@ -69,14 +69,7 @@ if 'skip_refresh' not in st.session_state:
 
 if st.session_state.get('active_timer'):
     if not st.session_state.get('timer_paused', False):
-        if st.session_state.timer_just_resumed:
-            st.session_state.timer_just_resumed = False
-            st_autorefresh(interval=50, limit=1, key="timer_resume_kick")
-        elif not st.session_state.skip_refresh:
-            st_autorefresh(interval=1000, key="timer_refresh_active")
-    else:
-        st_autorefresh(interval=30000, key="timer_refresh_paused")
-    st.session_state.skip_refresh = False
+        st_autorefresh(interval=1000, key="timer_refresh")
 
 # ─── Session state ────────────────────────────────────────────────────────────
 for _k, _v in {
@@ -87,7 +80,7 @@ for _k, _v in {
     'dark_mode': True, 'show_settings': False, 'feedback_list': [],
     'show_emergency_numbers': False, 'feedback_key': 0, 'feedback_submitted': False,
     'feedback_submitted_time': 0,
-    'show_eval_download': False, 'timer_just_resumed': False,
+    'show_eval_download': False,
 }.items():
     if _k not in st.session_state:
         st.session_state[_k] = _v
@@ -1375,19 +1368,18 @@ def show_chat_page():
                 with tc1:
                     if st.session_state.timer_paused:
                         if st.button("▶️ Resume", key="resume_timer", use_container_width=True):
-                            remaining = st.session_state.timer_paused_remaining
-                            duration = st.session_state.active_timer['duration']
-                            elapsed = duration - remaining
-                            st.session_state.timer_start_time = datetime.datetime.now() - datetime.timedelta(seconds=elapsed)
+                            rem = st.session_state.timer_paused_remaining
+                            st.session_state.timer_start_time = (
+                                datetime.datetime.now()
+                                - datetime.timedelta(seconds=(timer_info['duration'] - rem))
+                            )
                             st.session_state.timer_paused = False
                             st.session_state.timer_paused_remaining = None
-                            st.session_state.timer_just_resumed = True
                             st.rerun()
                     else:
                         if st.button("⏸️ Pause", key="pause_timer", use_container_width=True):
-                            elapsed_now = (datetime.datetime.now() - st.session_state.timer_start_time).total_seconds()
-                            st.session_state.timer_paused_remaining = max(0, timer_info['duration'] - elapsed_now)
                             st.session_state.timer_paused = True
+                            st.session_state.timer_paused_remaining = remaining
                             st.rerun()
                 with tc2:
                     if st.button("🔄 Restart", key="restart_timer", use_container_width=True):
