@@ -1369,9 +1369,10 @@ def show_chat_page():
                     if st.session_state.timer_paused:
                         if st.button("▶️ Resume", key="resume_timer", use_container_width=True):
                             rem = st.session_state.timer_paused_remaining
+                            elapsed = timer_info['duration'] - rem
                             st.session_state.timer_start_time = (
                                 datetime.datetime.now()
-                                - datetime.timedelta(seconds=(timer_info['duration'] - rem))
+                                - datetime.timedelta(seconds=elapsed + 1)
                             )
                             st.session_state.timer_paused = False
                             st.session_state.timer_paused_remaining = None
