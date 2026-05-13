@@ -69,7 +69,10 @@ if 'skip_refresh' not in st.session_state:
 
 if st.session_state.get('active_timer'):
     if not st.session_state.get('timer_paused', False):
-        if not st.session_state.skip_refresh:
+        if st.session_state.timer_just_resumed:
+            st.session_state.timer_just_resumed = False
+            st_autorefresh(interval=50, limit=1, key="timer_resume_kick")
+        elif not st.session_state.skip_refresh:
             st_autorefresh(interval=1000, key="timer_refresh_active")
     else:
         st_autorefresh(interval=30000, key="timer_refresh_paused")
@@ -84,7 +87,7 @@ for _k, _v in {
     'dark_mode': True, 'show_settings': False, 'feedback_list': [],
     'show_emergency_numbers': False, 'feedback_key': 0, 'feedback_submitted': False,
     'feedback_submitted_time': 0,
-    'show_eval_download': False,
+    'show_eval_download': False, 'timer_just_resumed': False,
 }.items():
     if _k not in st.session_state:
         st.session_state[_k] = _v
@@ -1378,6 +1381,7 @@ def show_chat_page():
                             st.session_state.timer_start_time = datetime.datetime.now() - datetime.timedelta(seconds=elapsed)
                             st.session_state.timer_paused = False
                             st.session_state.timer_paused_remaining = None
+                            st.session_state.timer_just_resumed = True
                             st.rerun()
                     else:
                         if st.button("⏸️ Pause", key="pause_timer", use_container_width=True):
