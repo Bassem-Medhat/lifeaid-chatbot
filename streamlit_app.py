@@ -64,9 +64,6 @@ section[data-testid="stSidebar"] hr {
 </style>
 """, unsafe_allow_html=True)
 # ─── Auto-refresh ─────────────────────────────────────────────────────────────
-if 'skip_refresh' not in st.session_state:
-    st.session_state.skip_refresh = False
-
 if st.session_state.get('active_timer'):
     if not st.session_state.get('timer_paused', False):
         st_autorefresh(interval=1000, key="timer_refresh")
@@ -1369,10 +1366,9 @@ def show_chat_page():
                     if st.session_state.timer_paused:
                         if st.button("▶️ Resume", key="resume_timer", use_container_width=True):
                             rem = st.session_state.timer_paused_remaining
-                            elapsed = timer_info['duration'] - rem
                             st.session_state.timer_start_time = (
                                 datetime.datetime.now()
-                                - datetime.timedelta(seconds=elapsed + 1)
+                                - datetime.timedelta(seconds=(timer_info['duration'] - rem))
                             )
                             st.session_state.timer_paused = False
                             st.session_state.timer_paused_remaining = None
@@ -1665,7 +1661,6 @@ def show_chat_page():
                 st.session_state.show_eval_download = True
                 st.rerun()
 
-            st.session_state.skip_refresh = True
             st.session_state.chat_history.append({'role': 'user', 'content': user_input})
 
             # Capture whether we are mid-follow-up BEFORE calling get_response.
