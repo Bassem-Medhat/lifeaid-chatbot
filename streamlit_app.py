@@ -78,7 +78,7 @@ for _k, _v in {
     'dark_mode': True, 'show_settings': False, 'feedback_list': [],
     'show_emergency_numbers': False, 'feedback_key': 0, 'feedback_submitted': False,
     'feedback_submitted_time': 0,
-    'show_eval_download': False, 'scroll_to_timer': False,
+    'show_eval_download': False,
 }.items():
     if _k not in st.session_state:
         st.session_state[_k] = _v
@@ -1298,10 +1298,6 @@ def show_chat_page():
     
         # ── Timer ──
         st.markdown('<div id="timer-section"></div>', unsafe_allow_html=True)
-        if st.session_state.scroll_to_timer:
-            st.session_state.scroll_to_timer = False
-            components.html('<script>window.parent.scrollTo(0, 0);</script>', height=0, scrolling=False)
-    
         if st.session_state.active_timer:
             timer_info = st.session_state.active_timer
     
@@ -1376,13 +1372,11 @@ def show_chat_page():
                             )
                             st.session_state.timer_paused = False
                             st.session_state.timer_paused_remaining = None
-                            st.session_state.scroll_to_timer = True
                             st.rerun()
                     else:
                         if st.button("⏸️ Pause", key="pause_timer", use_container_width=True):
                             st.session_state.timer_paused = True
                             st.session_state.timer_paused_remaining = remaining
-                            st.session_state.scroll_to_timer = True
                             st.rerun()
                 with tc2:
                     if st.button("🔄 Restart", key="restart_timer", use_container_width=True):
